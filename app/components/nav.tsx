@@ -24,10 +24,10 @@ export default function Nav() {
             pathname === route.href ? "text-foreground" : "text-muted hover:text-foreground"
           }`}
         >
-          <div className="md:block hidden">
+          <div className="sm:block hidden">
             [{i}] {route.label}
           </div>
-          <div className="md:hidden">
+          <div className="sm:hidden">
             {route.label}
           </div>
         </Link>
