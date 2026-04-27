@@ -35,7 +35,7 @@ export default function CopyEmail({ email }: { email: string }) {
       onClick={handleClick}
       className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
     >
-      <FaEnvelope size={14} />
+      <span className="hidden sm:inline"><FaEnvelope size={14} /></span>
       {copied ? "Yoink" : "Email"}
     </button>
   );

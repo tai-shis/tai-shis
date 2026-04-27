@@ -21,7 +21,7 @@ export default function Socials() {
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
           >
-            {icon} {label}
+            <span className="hidden sm:inline">{icon}</span> {label}
           </a>
         ))}
       </div>
