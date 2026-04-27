@@ -25,6 +25,13 @@
   --font-aber-mono: var(--font-aber-mono);
 }
 
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+}
+
 @layer components {
   .tui-panel {
     border: 1px solid var(--border);
