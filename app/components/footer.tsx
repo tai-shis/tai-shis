@@ -1,9 +1,13 @@
+import { GitPullRequest } from 'lucide-react';
 import { execSync } from "child_process";
 import Panel from "@/app/components/panel";
 
 function getLastCommit(): string | null {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7);
+  }
   try {
-    return execSync("git rev-parse --short HEAD", { cwd: process.cwd() })
+    return execSync("git rev-parse HEAD", { cwd: process.cwd() })
       .toString()
       .trim();
   } catch {
@@ -13,12 +17,14 @@ function getLastCommit(): string | null {
 
 export default function Footer() {
   const commit = getLastCommit();
+  const shortCommit = commit ? commit.slice(0, 7) : null;
+  const commitURL = commit ? `https://github.com/tai-shis/tai-shis.com/commit/${commit}` : '';
 
   return (
     <Panel name="footer" className="flex items-center justify-between px-4 py-2 text-sm text-muted">
       <span className="p-2">© 2026 - tai-shis</span>
-      <a href={`#`} className="hover:text-foreground transition-colors p-2">
-        {commit ?? "—"}
+      <a href={commitURL} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors p-2 flex flex-row items-center justify-center gap-1">
+        <GitPullRequest size={16}/> {shortCommit ?? "—"}
       </a>
     </Panel>
   );

@@ -24,7 +24,12 @@ export default function Nav() {
             pathname === route.href ? "text-foreground" : "text-muted hover:text-foreground"
           }`}
         >
-          [{i}] {route.label}
+          <div className="md:block hidden">
+            [{i}] {route.label}
+          </div>
+          <div className="md:hidden">
+            {route.label}
+          </div>
         </Link>
       ))}
     </Panel>
