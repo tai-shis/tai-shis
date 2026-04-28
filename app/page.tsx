@@ -2,6 +2,7 @@ import figlet from "figlet";
 import About from "./components/about";
 import Me from "./components/me";
 import Socials from "./components/socials";
+import Propaganda from "./components/propaganda";
 
 export default function Home() {
   const asciiText = figlet.textSync("tai-shis", { font: "Standard" });
@@ -12,6 +13,7 @@ export default function Home() {
         <Me asciiText={asciiText}/>
         <Socials/>
         <About/>
+        <Propaganda/>
       </div>
     </main>
   );
