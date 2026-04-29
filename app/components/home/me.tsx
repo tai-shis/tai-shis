@@ -18,7 +18,7 @@ export default function Me({ asciiText }: { asciiText: string }) {
 
   return (
     <Panel name="me" className="flex flex-col sm:flex-row items-center sm:items-start gap-1">
-      <pre className="text-foreground leading-tight text-xs font-mono shrink-0 p-2 sm:pb-2 pb-0 ">
+      <pre className="text-foreground leading-tight text-xs font-mono shrink-0 p-2 sm:pb-2 pb-0 cursor-default">
         {asciiText}
       </pre>
       <div className="flex-1 min-w-0 w-full p-2 sm:pt-2 pt-0  text-sm text-muted flex flex-col gap-1 items-center sm:items-start self-center">

@@ -188,7 +188,10 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
               transition: OPACITY_TRANSITION,
             }}
           >
-            <div className="h-full overflow-y-auto no-scrollbar pt-2">
+            <div
+              onClick={() => goToIndex(i)}
+              className="h-full overflow-y-auto no-scrollbar pt-2 "
+            >
               {slide}
             </div>
           </div>
