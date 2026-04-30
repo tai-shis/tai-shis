@@ -30,7 +30,7 @@ export default function Footer() {
         [0: Home | 1: Projects | 2: Resume | 3: Hobbies]
       </span>
       <span className="absolute bottom-0 right-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
-        [←/→ Scroll]
+        [↑/↓ Panel | ←/→ Scroll]
       </span>
     </Panel>
   );

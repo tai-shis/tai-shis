@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const GAP = 16;
+const PANEL_SNAP_OFFSET = 8; // px gap kept above panel top when snapping (matches pt-2)
 const INACTIVE_OPACITY = 0.3;
 const SWIPE_THRESHOLD = 0.3;
 const EDGE_RESISTANCE = 0.3;
@@ -18,6 +19,7 @@ interface PageCarouselProps {
 export default function PageCarousel({ index, onNavigate, children }: PageCarouselProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [slideWidth, setSlideWidth] = useState(0);
   const slides = React.Children.toArray(children);
 
@@ -52,8 +54,30 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "ArrowLeft") goToIndex(destRef.current - 1);
-      if (e.key === "ArrowRight") goToIndex(destRef.current + 1);
+      if (e.key === "ArrowLeft") { goToIndex(destRef.current - 1); return; }
+      if (e.key === "ArrowRight") { goToIndex(destRef.current + 1); return; }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+
+      const scrollEl = scrollRefs.current[indexRef.current];
+      if (!scrollEl) return;
+      const panels = Array.from(scrollEl.querySelectorAll("[data-panel]")) as HTMLElement[];
+      if (!panels.length) return;
+
+      e.preventDefault();
+
+      const containerTop = scrollEl.getBoundingClientRect().top;
+      const panelTops = panels.map(
+        p => p.getBoundingClientRect().top - containerTop + scrollEl.scrollTop - PANEL_SNAP_OFFSET
+      );
+      const cur = scrollEl.scrollTop;
+
+      if (e.key === "ArrowDown") {
+        const next = panelTops.find(t => t > cur + 2);
+        if (next !== undefined) scrollEl.scrollTo({ top: Math.max(0, next), behavior: "smooth" });
+      } else {
+        const prev = [...panelTops].reverse().find(t => t < cur - 2);
+        scrollEl.scrollTo({ top: Math.max(0, prev ?? 0), behavior: "smooth" });
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -188,8 +212,9 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
             }}
           >
             <div
+              ref={(el) => { scrollRefs.current[i] = el; }}
               onClick={() => goToIndex(i)}
-              className="h-full overflow-y-auto no-scrollbar pt-2 "
+              className="h-full overflow-y-auto no-scrollbar pt-2"
             >
               {slide}
             </div>
