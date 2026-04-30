@@ -7,6 +7,7 @@ export default function Stoa() {
       description="A private communication platform build with a focus on privacy."
       tags={["TypeScript", "React", "Convex", "Rust", "Tauri", "Cloudflare R2"]}
       link="https://stoa.gg"
+      personal={true}
       wip={true}
     />
   );

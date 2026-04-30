@@ -9,6 +9,7 @@
   --muted: #9095A2;
   --surface: #111111;
   --accent: #22d3ee;
+  --sunset: #fb923c;
 }
 
 @theme inline {
@@ -20,6 +21,7 @@
   --color-muted: var(--muted);
   --color-surface: var(--surface);
   --color-accent: var(--accent);
+  --color-sunset: var(--sunset);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-space-mono: var(--font-space-mono);
