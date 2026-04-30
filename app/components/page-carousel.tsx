@@ -93,7 +93,7 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
       startY = e.touches[0].clientY;
       isHorizontal = null;
 
-      // Read actual mid-animation position before disabling transition —
+      // Read actual mid-animation position before disabling transition
       // without this, setting transition:none snaps the element to its animation target.
       const matrix = new DOMMatrix(getComputedStyle(track).transform);
       dragBaseX = matrix.m41;

@@ -28,7 +28,7 @@ export default function Nav({ index, onNavigate }: NavProps) {
           key={label}
           onClick={() => onNavigate(i)}
           className={`px-4 py-2 text-sm transition-colors cursor-pointer ${
-            index === i ? "text-foreground" : "text-muted hover:text-foreground"
+            index === i ? "text-accent" : "text-muted hover:text-accent"
           }`}
         >
           <span className="sm:inline hidden">[{i}] </span>

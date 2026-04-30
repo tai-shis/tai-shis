@@ -49,7 +49,7 @@ export default function AnimatedVerb({ verb }: { verb: string }) {
     return (
       <span>
         {verb.split("").map((char, i) => (
-          <span key={i} className={i >= scanPos && i < scanPos + 3 ? "text-foreground/60" : ""}>
+          <span key={i} className={i >= scanPos && i < scanPos + 3 ? "text-accent" : ""}>
             {char}
           </span>
         ))}

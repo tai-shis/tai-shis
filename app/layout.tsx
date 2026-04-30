@@ -3,8 +3,9 @@ import { Geist, Geist_Mono, Space_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import Footer from "@/app/components/footer";
 import Shell from "@/app/components/shell";
-import HomeSlide from "@/app/components/home/home-slide";
-import VendorReports from "@/app/components/projects/vendor-reports";
+import Home from "@/app/components/home/home";
+import Projects from "@/app/components/projects/projects";
+import Resume from "@/app/components/resume/resume";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,7 +39,7 @@ const aberMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "tai-shis | Tai Shishiba - Software Developer",
+  title: "Tai Shishiba - Software Developer",
   description: "",
 };
 
@@ -51,9 +52,9 @@ export default function RootLayout({}: Readonly<{ children: React.ReactNode }>) 
       <body className="h-full overflow-hidden flex flex-col">
         <div className="w-full max-w-3xl mx-auto flex flex-col h-full px-4 py-8 gap-4">
           <Shell>
-            <HomeSlide />
-            <VendorReports />
-            <div />
+            <Home/>
+            <Projects/>
+            <Resume />
             <div />
           </Shell>
           <Footer />

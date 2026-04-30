@@ -40,7 +40,7 @@ export default function CopyButton({ label, copyText, reactionText, icon, classN
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer ${className ?? ""}`}
+      className={`inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors cursor-pointer ${className ?? ""}`}
     >
       {icon}
       <span className="hidden sm:inline">{copied ? reactionText : label}</span>

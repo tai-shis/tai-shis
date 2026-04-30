@@ -20,7 +20,7 @@ export default function Socials() {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors"
+            className="flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors"
           >
             {icon} <span className="hidden sm:inline">{label}</span>
           </a>
