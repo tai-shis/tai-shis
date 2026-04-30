@@ -22,7 +22,7 @@ export default function Nav({ index, onNavigate }: NavProps) {
   }, [onNavigate]);
 
   return (
-    <Panel name="nav" className="flex gap-0">
+    <Panel name="nav" className="flex gap-0 z-10">
       {labels.map((label, i) => (
         <button
           key={label}

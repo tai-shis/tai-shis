@@ -21,7 +21,7 @@ export default function Footer() {
   const commitURL = commit ? `https://github.com/tai-shis/tai-shis.com/commit/${commit}` : '';
 
   return (
-    <Panel name="footer" className="flex items-center px-4 py-2 text-sm text-muted relative">
+    <Panel name="footer" className="flex items-center px-4 py-2 text-sm text-muted relative z-10">
       <span className="p-2">© 2026 - tai-shis</span>
       <a href={commitURL} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors p-2 flex flex-row items-center justify-center gap-1 ml-auto">
         <GitPullRequest size={16}/> {shortCommit ?? "—"}

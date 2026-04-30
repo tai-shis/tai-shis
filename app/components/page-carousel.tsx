@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const GAP = 16;
-const INACTIVE_OPACITY = 0.8;
+const INACTIVE_OPACITY = 0.3;
 const SWIPE_THRESHOLD = 0.3;
 const EDGE_RESISTANCE = 0.3;
 const TRANSITION = "transform 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
@@ -132,12 +132,11 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
     };
 
     const onEnd = (e: TouchEvent) => {
+      track.style.transition = TRANSITION;
+      slideEls().forEach(el => { el.style.transition = OPACITY_TRANSITION; });
       if (!isHorizontal) return;
       const dx = e.changedTouches[0].clientX - startX;
       const threshold = slideWidthRef.current * SWIPE_THRESHOLD;
-
-      track.style.transition = TRANSITION;
-      slideEls().forEach(el => { el.style.transition = OPACITY_TRANSITION; });
 
       if (Math.abs(dx) > threshold) {
         const newIndex = dx < 0 ? destRef.current + 1 : destRef.current - 1;
@@ -165,7 +164,7 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-h-0 overflow-hidden sm:overflow-visible"
+      className="flex-1 min-h-0 overflow-visible"
       style={{ touchAction: "pan-y" }}
     >
       <div
