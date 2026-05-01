@@ -1,5 +1,5 @@
 import Panel from "@/app/components/panel";
-import { Bullet, Chip, Divider } from "./shared";
+import { Bullet, Chip, Divider } from "@/app/components/shared";
 
 const projects = [
   {

@@ -1,5 +1,5 @@
 import Panel from "@/app/components/panel";
-import { Bullet, Divider } from "./shared";
+import { Bullet, Divider } from "@/app/components/shared";
 
 const education = [
   {

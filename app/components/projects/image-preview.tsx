@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 
 interface ImagePreviewProps {
   images: string[];
@@ -45,9 +46,9 @@ export default function ImagePreview({ images }: ImagePreviewProps) {
           <button
             key={i}
             onClick={(e) => handleOpen(src, e)}
-            className="shrink-0 h-20 w-32 overflow-hidden border border-border hover:border-border-accent transition-colors cursor-pointer"
+            className="relative shrink-0 h-20 w-32 overflow-hidden border border-border hover:border-border-accent transition-colors cursor-pointer"
           >
-            <img src={src} alt={`preview ${i + 1}`} className="h-full w-full object-cover" />
+            <Image src={src} alt={`preview ${i + 1}`} fill sizes="128px" className="object-cover" />
           </button>
         ))}
       </div>
@@ -62,10 +63,11 @@ export default function ImagePreview({ images }: ImagePreviewProps) {
             className={`tui-panel border-border-accent overflow-hidden ${closing ? "animate-zoom-out" : "animate-zoom-in"}`}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={selected}
               alt="preview"
-              className="max-w-[90vw] max-h-[90vh] object-contain"
+              className="max-w-[90vw] max-h-[90vh] object-contain block"
             />
           </div>
         </div>,

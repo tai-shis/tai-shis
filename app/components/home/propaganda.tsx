@@ -12,7 +12,7 @@ export default function Propaganda() {
         By the way, you should also get a <a href="https://frame.work" target="_blank" rel="noopener noreferrer" className="hover:underline no-underline">Framework</a> laptop.
         The 13 Pro is soon to come...
         <br /><br />
-        Also, NixOS on the desktop is on the way. I'm just <span className="line-through">lazy</span> :3c
+        Also, NixOS on the desktop is on the way. I&apos;m just <span className="line-through">lazy</span> :3c
       </p>
     </Panel>
   );

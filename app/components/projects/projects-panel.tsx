@@ -7,7 +7,7 @@ import RegisterAllocator from "./register-allocator";
 import UrbanPulse from "./urban-pulse";
 import SystemDesign from "./system-design";
 
-export default function Projects() {
+export default function ProjectsPanel() {
   return (
     <div className="w-full flex flex-col gap-4">
       <VendorReports />

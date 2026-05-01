@@ -9,13 +9,15 @@ export default function AnimatedVerb({ verb }: { verb: string }) {
   const [charCount, setCharCount] = useState(0);
   const [scanPos, setScanPos] = useState(0);
   const [scanDir, setScanDir] = useState(1);
+  const [prevVerb, setPrevVerb] = useState(verb);
 
-  useEffect(() => {
+  if (prevVerb !== verb) {
+    setPrevVerb(verb);
     setPhase("typing");
     setCharCount(0);
     setScanPos(0);
     setScanDir(1);
-  }, [verb]);
+  }
 
   useEffect(() => {
     if (phase !== "typing") return;
@@ -29,15 +31,17 @@ export default function AnimatedVerb({ verb }: { verb: string }) {
 
   useEffect(() => {
     if (phase !== "scanning") return;
-    if (scanPos >= verb.length && scanDir === 1) {
-      setScanDir(-1);
-      return;
-    }
     if (scanPos <= -3 && scanDir === -1) {
-      setPhase("idle");
-      return;
+      const t = setTimeout(() => setPhase("idle"), 50);
+      return () => clearTimeout(t);
     }
-    const t = setTimeout(() => setScanPos((p) => p + scanDir), 50);
+    const t = setTimeout(() => {
+      if (scanPos >= verb.length && scanDir === 1) {
+        setScanDir(-1);
+      } else {
+        setScanPos((p) => p + scanDir);
+      }
+    }, 50);
     return () => clearTimeout(t);
   }, [phase, scanPos, scanDir, verb]);
 

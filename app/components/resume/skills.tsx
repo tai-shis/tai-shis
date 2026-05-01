@@ -1,5 +1,5 @@
 import Panel from "@/app/components/panel";
-import { Chip } from "./shared";
+import { Chip } from "@/app/components/shared";
 
 type Item = [label: string, accent: boolean];
 

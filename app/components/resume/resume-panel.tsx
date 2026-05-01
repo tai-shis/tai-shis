@@ -3,7 +3,7 @@ import Experience from "./experience";
 import Projects from "./projects";
 import Education from "./education";
 
-export default function Resume() {
+export default function ResumePanel() {
   return (
     <div className="w-full flex flex-col gap-4">
       <Skills />

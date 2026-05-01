@@ -1,6 +1,6 @@
 export function Chip({ label, accent = false }: { label: string; accent?: boolean }) {
   return (
-    <span className={`px-1.5 py-0.5 border ${accent ? "border-accent text-accent" : "border-border text-muted"}`}>
+    <span className={`px-1.5 py-0.5 bg-background border text-sm ${accent ? "border-accent text-accent" : "border-border text-muted"}`}>
       {label}
     </span>
   );

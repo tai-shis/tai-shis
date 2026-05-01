@@ -1,10 +1,20 @@
-import figlet from "figlet";
+import Shell from "@/app/components/shell";
+import HomePanel from "@/app/components/home/home-panel";
+import ProjectsPanel from "@/app/components/projects/projects-panel";
+import ResumePanel from "@/app/components/resume/resume-panel";
+import HobbiesPanel from "@/app/components/hobbies/panel/hobbies-panel";
+import Footer from "@/app/components/footer";
 
 export default function Home() {
-  const asciiText = figlet.textSync("tai-shis", { font: "Standard" });
-
   return (
-    <main className="flex flex-1 flex-col items-center justify-center">
-    </main>
+    <>
+      <Shell>
+        <HomePanel />
+        <ProjectsPanel />
+        <ResumePanel />
+        <HobbiesPanel />
+      </Shell>
+      <Footer />
+    </>
   );
 }

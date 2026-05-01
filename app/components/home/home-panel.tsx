@@ -4,7 +4,7 @@ import Me from "./me";
 import Socials from "./socials";
 import Propaganda from "./propaganda";
 
-export default function Home() {
+export default function HomePanel() {
   const asciiText = figlet.textSync("tai-shis", { font: "Standard" });
   return (
     <div className="w-full flex flex-col gap-4">
