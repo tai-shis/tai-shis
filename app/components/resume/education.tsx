@@ -1,5 +1,6 @@
 import Panel from "@/app/components/panel";
 import { Bullet, Divider } from "@/app/components/shared";
+import { Computer } from "lucide-react";
 
 const education = [
   {
@@ -11,7 +12,7 @@ const education = [
       "Dean's Honour Roll (5 consecutive semesters)",
       "President's Honour Roll (2 consecutive years)",
       "Cumulative GPA: 3.89 / 4.00",
-      "Relevant Courses: Data Structures and Algorithms, Introduction to Databases, Foundations: Software Engineering, Web Development for Computer Science, Computing Architecture and Machinery",
+      "Relevant Courses: Algorithms and Complexity, System Design, Introduction to Databases, Foundations: Software Engineering, Web Development for Computer Science, Computing Architecture and Machinery",
     ],
   },
 ];

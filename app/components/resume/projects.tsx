@@ -28,23 +28,15 @@ const projects = [
     ],
   },
   {
-    title: "Register Allocator for a Simple Compiler",
-    stack: ["Python", "Git"],
-    date: "Jan. 2026 – Present",
+    title: "Urban Pulse",
+    stack: ["Next.js", "TypeScript", "Prisma", "NeonDB", "Ollama", "AWS S3"],
+    date: "Oct. 2025",
+    note: "Hack the Change 2025",
     bullets: [
-      "Designed graph-coloring algorithms and data structures to map program variables onto a fixed set of CPU registers",
-      "Maintained clean CI/CD practices through GitHub pull requests, branch management, and peer code reviews",
-      "Established documented coding standards and project conventions to coordinate contributions across the team",
-    ],
-  },
-  {
-    title: "Space Invaders",
-    stack: ["C", "Assembly", "Git"],
-    date: "Jan. 2025 – Apr. 2025",
-    bullets: [
-      "Recreated the classic arcade game in C and Assembly, writing custom hardware drivers from scratch",
-      "Coordinated version control with teammates using Git, resolving merge conflicts through structured branching",
-      "Delivered on schedule using Agile sprints to track integration milestones across a multi-week build",
+      "Built the backend in a 24-hour hackathon for a full-stack web app letting residents report and view urban infrastructure issues",
+      "Designed the Postgres schema with Prisma and NeonDB, and implemented authentication and session management with Neon Auth",
+      "Integrated AWS S3 for user-uploaded issue photos using presigned URLs for direct client-to-bucket uploads",
+      "Wired up API calls to a remote Ollama LLM hosted on a teammate's server, enabling AI-powered features without external API dependencies",
     ],
   },
 ];
@@ -57,7 +49,9 @@ export default function Projects() {
           <div key={p.title}>
             {i > 0 && <Divider />}
             <div className="flex justify-between items-baseline gap-2">
-              <span className="font-bold text-muted group-hover:text-accent transition-colors">{p.title}</span>
+              <span className="font-bold text-muted group-hover:text-accent transition-colors">
+                {p.title}{"note" in p && p.note ? <span className="font-normal text-muted ml-2">— {p.note}</span> : null}
+              </span>
               <span className="text-muted shrink-0">{p.date}</span>
             </div>
             <div className="flex flex-wrap gap-1.5 mt-1">
