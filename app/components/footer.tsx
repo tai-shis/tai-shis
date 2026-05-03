@@ -27,7 +27,7 @@ export default function Footer() {
         <GitPullRequest size={16}/> {shortCommit ?? "—"}
       </a>
       <span className="absolute bottom-0 left-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
-        [0: Home | 1: Projects | 2: Resume | 3: Hobbies]
+        [1: Home | 2: Projects | 3: Resume | 4: Hobbies]
       </span>
       <span className="absolute bottom-0 right-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
         [↑/↓ Panel | ←/→ Scroll]

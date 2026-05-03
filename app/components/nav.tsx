@@ -15,7 +15,7 @@ export default function Nav({ index, onNavigate }: NavProps) {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       const i = parseInt(e.key);
-      if (!isNaN(i) && i >= 0 && i < labels.length) onNavigate(i);
+      if (!isNaN(i) && i >= 1 && i <= labels.length) onNavigate(i - 1);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -31,7 +31,7 @@ export default function Nav({ index, onNavigate }: NavProps) {
             index === i ? "text-accent" : "text-muted hover:text-accent"
           }`}
         >
-          <span className="sm:inline hidden">[{i}] </span>
+          <span className="sm:inline hidden">[{i + 1}] </span>
           {label}
         </button>
       ))}
