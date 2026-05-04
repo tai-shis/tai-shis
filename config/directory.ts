@@ -28,9 +28,9 @@ const unsortedFiles: Directory = {
       isActive: true,
       files: [
         {
-          name: "index.tsx",
+          name: "page.tsx",
           route: "/hobbies",
-          path: "/hobbies/index.tsx",
+          path: "/hobbies/page.tsx",
           isActive: true,
         },
       ],
@@ -42,9 +42,9 @@ const unsortedFiles: Directory = {
           isActive: false,
           files: [
             {
-              name: "index.tsx",
+              name: "page.tsx",
               route: "/hobbies/mechanical-keyboards/",
-              path: "/hobbies/mechanical-keyboards/index.tsx",
+              path: "/hobbies/mechanical-keyboards/page.tsx",
               isActive: false,
             }
           ],
@@ -56,9 +56,9 @@ const unsortedFiles: Directory = {
           isActive: false,
           files: [
             {
-              name: "index.tsx",
+              name: "page.tsx",
               route: "/hobbies/music/",
-              path: "/hobbies/music/index.tsx",
+              path: "/hobbies/music/page.tsx",
               isActive: false,
             }
           ],
@@ -70,9 +70,9 @@ const unsortedFiles: Directory = {
           isActive: false,
           files: [
             {
-              name: "index.tsx",
+              name: "page.tsx",
               route: "/hobbies/fashion/",
-              path: "/hobbies/fashion/index.tsx",
+              path: "/hobbies/fashion/page.tsx",
               isActive: false,
             },
           ],
@@ -84,9 +84,9 @@ const unsortedFiles: Directory = {
           isActive: false,
           files: [
             {
-              name: "index.tsx",
+              name: "page.tsx",
               route: "/hobbies/audiophile/",
-              path: "/hobbies/audiophile/index.tsx",
+              path: "/hobbies/audiophile/page.tsx",
               isActive: false,
             },
           ],
@@ -98,9 +98,9 @@ const unsortedFiles: Directory = {
           isActive: false,
           files: [
             {
-              name: "index.tsx",
+              name: "page.tsx",
               route: "/hobbies/photography/",
-              path: "/hobbies/photography/index.tsx",
+              path: "/hobbies/photography/page.tsx",
               isActive: false,
             },
           ],

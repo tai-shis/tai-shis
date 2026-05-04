@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, createContext, useState } from "react";
+import { useContext, createContext, useState, useCallback } from "react";
 import { Directory, directory } from "@/config/directory";
 import { useRouter } from "next/navigation";
 
@@ -27,7 +27,7 @@ export const TreeProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   const [tree, setTree] = useState<Directory>(directory);
-  const clickOnItem = (path: string) => {
+  const clickOnItem = useCallback((path: string) => {
     const steps = path.split("/");
     
     const newTree = structuredClone(tree);
@@ -45,11 +45,11 @@ export const TreeProvider = ({ children }: { children: React.ReactNode }) => {
     const lastPath = steps[steps.length - 1];
     const endsWithFile = ctx.files?.find(f => f.name === lastPath);
     if (endsWithFile) {
+      const wasActive = endsWithFile.isActive;
       cleanTree(newTree);
       parents.forEach(p => p.isActive = true);
       endsWithFile.isActive = true;
-      
-      router.replace(endsWithFile.route);
+      if (!wasActive) router.replace(endsWithFile.route);
     } else {
       const endsWithFolder = ctx.subfolders?.find(s => s.name === lastPath) as Directory;
 
@@ -59,7 +59,7 @@ export const TreeProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     setTree(newTree);
-  };
+  }, [tree, router]);
 
   return (
     <TreeContext.Provider value={{ tree, clickOnItem }}>

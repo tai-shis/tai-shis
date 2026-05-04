@@ -9,19 +9,15 @@ export const metadata: Metadata = {
   description: "",
 };
 
-function TreeLayout() {
-  return (
-    <Tree />
-  );
-}
-
 export default function HobbiesLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="w-full max-w-full mx-auto flex flex-col h-full px-4 py-8 gap-4">
+    <div className="w-full max-w-full mx-auto flex flex h-full px-4 py-8 gap-4">
       <TreeProvider>
-        <TreeLayout />
+        <Tree />
       </TreeProvider>
-      {children}
+      <div>
+        {children}
+      </div>
     </div>
   );
 }

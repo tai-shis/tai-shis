@@ -2,9 +2,9 @@
 
 import { Directory } from "@/config/directory";
 import Panel from "../panel";
-import { FolderIcon, FolderOpenIcon } from "lucide-react";
+import { FolderIcon, FolderOpenIcon, FileIcon } from "lucide-react";
 import { useTree } from "@/contexts/tree-context";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 function Folder({
   level,
@@ -29,17 +29,11 @@ function Folder({
       className={`
         flex items-center pr-2 gap-2 cursor-pointer rounded-sm! select-none
         hover:text-sunset
-        ${isActive || isFocused ? "text-sunset" : "text-muted"}
+        ${isFocused ? "text-accent": isActive  ? "text-sunset" : "text-muted"}
         transition-colors duration-200
       `}
-      style={{ paddingLeft: `${(2 + level * 2) * 0.25}rem` }}
-      onClick={() => {
-        try {
-          clickOnItem(path);
-        } catch (error) {
-          console.error(error);
-        }
-      }}
+      style={{ paddingLeft: `${(2 + level * 2) * 0.25}rem` }} 
+      onClick={() => clickOnItem(path)}
     >
       {isExpanded ? <FolderOpenIcon size={16} /> : <FolderIcon size={16} />}
       <span className="text-sm">{name}</span>
@@ -67,22 +61,27 @@ function File({
       className={`
         flex items-center pr-2 gap-2 cursor-pointer rounded-sm! select-none
         hover:text-sunset
-        ${isActive || isFocused ? "text-sunset" : "text-muted"}
-        ${isActive ? "bg-muted/20" : ""}
+        ${isFocused ? "text-accent" : isActive ? "bg-muted/20 text-sunset" : "text-muted" }
         transition-colors duration-200
       `}
       style={{ paddingLeft: `${(2 + level * 2) * 0.25}rem` }}
-      onClick={() => {
-        try {
-          clickOnItem(path);
-        } catch (error) {
-          console.error(error);
-        }
-      }}
+      onClick={() => clickOnItem(path)}
     >
+      <FileIcon size={16} />
       <span className="text-sm">{name}</span>
     </div>
   );
+}
+
+function findActivePath(dir: Directory): string | null {
+  for (const file of dir.files ?? []) {
+    if (file.isActive) return file.path;
+  }
+  for (const subfolder of dir.subfolders ?? []) {
+    const found = findActivePath(subfolder);
+    if (found) return found;
+  }
+  return null;
 }
 
 function flattenVisible(dir: Directory): string[] {
@@ -100,7 +99,7 @@ function renderDirectory(
   focusedPath: string | null,
 ) {
   return (
-    <div className={`${props.isActive ? "text-sunset" : ""}`}>
+    <div>
       <Folder level={level} {...props} isFocused={focusedPath === props.path} />
       <div className={`grid transition-all duration-150 ease-in-out ${props.isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
         <div className="overflow-hidden">
@@ -120,40 +119,50 @@ function renderDirectory(
 
 export default function Tree() {
   const { tree: directory, clickOnItem } = useTree();
-  const [isFocused, setIsFocused] = useState(false);
   const [focusedPath, setFocusedPath] = useState<string | null>(null);
+  const isFocused = focusedPath !== null;
+  const panelRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [overlayStyle, setOverlayStyle] = useState<{ top: number; height: number } | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isFocused || !focusedPath || !containerRef.current) {
       setOverlayStyle(null);
       return;
     }
-    const el = containerRef.current.querySelector<HTMLElement>(`[data-path="${focusedPath}"]`);
+    const el = containerRef.current.querySelector<HTMLElement>(`[data-path="${CSS.escape(focusedPath)}"]`);
     if (!el) { setOverlayStyle(null); return; }
     setOverlayStyle({ top: el.offsetTop, height: el.offsetHeight });
-  }, [isFocused, focusedPath, directory]);
+  }, [isFocused, focusedPath]);
+
+  const enterFocus = useCallback(() => {
+    const subfolders = directory.subfolders;
+    if (!subfolders?.length) return;
+    setFocusedPath(findActivePath(directory) ?? subfolders[0].path);
+  }, [directory]);
+
+  const handlePanelClick = () => {
+    if (!focusedPath) enterFocus();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key === "p") {
         e.preventDefault();
-        setIsFocused(true);
-        if (!focusedPath) {
-          setFocusedPath(directory.subfolders![0].path);
-        }
+        if (!focusedPath) enterFocus();
         return;
       }
 
       if (!isFocused) return;
 
       if (e.key === "Escape") {
-        setIsFocused(false);
+        setFocusedPath(null);
         return;
       }
 
-      const items = flattenVisible(directory.subfolders![0]);
+      const subfolders = directory.subfolders;
+      if (!subfolders?.length) return;
+      const items = flattenVisible(subfolders[0]);
       const idx = focusedPath ? items.indexOf(focusedPath) : -1;
 
       if (e.key === "ArrowDown") {
@@ -163,32 +172,40 @@ export default function Tree() {
         e.preventDefault();
         setFocusedPath(items[Math.max(idx - 1, 0)]);
       } else if (e.key === "Enter" && focusedPath) {
-        try {
-          clickOnItem(focusedPath);
-        } catch (error) {
-          console.error(error);
-        }
+        clickOnItem(focusedPath);
+      }
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setFocusedPath(null);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFocused, focusedPath, directory, clickOnItem]);
+    window.addEventListener("mousedown", handleMouseDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleMouseDown);
+    };
+  }, [isFocused, focusedPath, directory, clickOnItem, enterFocus]);
 
   return (
-    <Panel name="directory" className="py-4 h-full min-w-72 w-fit">
+    <div ref={panelRef} onClick={handlePanelClick}>
+    <Panel name="directory" className="py-4 h-full min-w-72 w-fit" active={isFocused}>
       <div ref={containerRef} className="text-sm relative">
         {overlayStyle && (
           <div
-            className="absolute left-0 right-0 bg-muted/30 pointer-events-none rounded-sm! transition-all duration-150 ease-in-out"
+            className="absolute left-0 right-0 bg-muted/30 text-accent! pointer-events-none rounded-sm! transition-all duration-150 ease-in-out"
             style={{ top: overlayStyle.top, height: overlayStyle.height }}
           />
         )}
-        {renderDirectory(0, directory.subfolders![0], isFocused ? focusedPath : null)}
+        {directory.subfolders?.[0] && renderDirectory(0, directory.subfolders[0], focusedPath)}
       </div>
-      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block whitespace-nowrap">
+      <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-background px-1.5 text-xs font-mono transition-colors group-hover:text-accent hidden sm:block whitespace-nowrap ${isFocused ? "text-accent" : "text-muted"}`}>
         [ Ctrl+P: Focus | Esc: Unfocus ]
       </span>
     </Panel>
+    </div>
   );
 }
