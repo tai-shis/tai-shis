@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "../globals.css";
 import Tree from "../components/hobbies/tree";
-import { directory } from "@/config/directory";
 import { TreeProvider } from "@/contexts/tree-context";
 
 export const metadata: Metadata = {

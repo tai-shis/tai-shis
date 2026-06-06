@@ -11,10 +11,12 @@ interface ProjectTemplateProps {
   school?: boolean;
   hackathon?: boolean;
   personal?: boolean;
+  freelance?: boolean;
   wip?: boolean;
+  maintaining?: boolean;
 }
 
-export default function ProjectTemplate({ panelName, description, tags, images, link, school, hackathon, personal, wip }: ProjectTemplateProps) {
+export default function ProjectTemplate({ panelName, description, tags, images, link, school, hackathon, personal, freelance, wip, maintaining }: ProjectTemplateProps) {
   return (
     <Panel name={panelName} className="p-4 relative">
       {link && (
@@ -35,9 +37,19 @@ export default function ProjectTemplate({ panelName, description, tags, images, 
               WIP
             </span>
           )}
+          {maintaining && (
+            <span className="text-sm text-mint border border-mint px-2 py-0.5">
+              Maintaining
+            </span>
+          )}
           {personal && (
             <span className="text-sm text-accent border border-accent px-2 py-0.5">
               Personal Project
+            </span>
+          )}
+          {freelance && (
+            <span className="text-sm text-accent border border-accent px-2 py-0.5">
+              Freelance
             </span>
           )}
           {school && (

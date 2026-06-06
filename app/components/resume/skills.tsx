@@ -4,10 +4,10 @@ import { Chip } from "@/app/components/shared";
 type Item = [label: string, accent: boolean];
 
 const skills: { label: string; items: Item[] }[] = [
-  { label: "languages",  items: [["JavaScript/TypeScript", true], ["Python", true], ["Java", false], ["C/C++", false], ["HTML/CSS", false], ["SQL", false], ["Nix", false]] },
-  { label: "frameworks", items: [["React", true], ["Next.js", true], ["Express", false], ["Convex", false], ["NeonDB", false]]},
-  { label: "tools",      items: [["Git", true], ["VSCode", false], ["Postman", false], ["Emacs", false], ["Claude", false]] },
-  { label: "libraries",  items: [["NumPy", false], ["Matplotlib", false], ["Mongoose", false], ["Shadcn", false], ["BetterAuth", false], ["Prisma", false]] },
+  { label: "languages",  items: [["JavaScript/TypeScript", true], ["Python", true], ["SQL", false], ["Java", false], ["C/C++", false], ["HTML/CSS", false], ["Assembly", false], ["Nix", false]] },
+  { label: "frameworks", items: [["React", true], ["Next.js", true], ["Express", false], ["Convex", false], ["NeonDB", false], ["Hono", false], ["WorkOS", false], ["Clerk", false]]},
+  { label: "tools",      items: [["Git", true], ["GitHub", false], ["VSCode", false], ["Postman", false], ["Emacs", false], ["Claude", false]] },
+  { label: "libraries",  items: [["TailwindCSS", false], ["NumPy", false], ["Matplotlib", false], ["Mongoose", false], ["Shadcn", false], ["BetterAuth", false], ["Playwright", false], ["Axiom", false]] },
 ];
 
 export default function Skills() {

@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
   TableHead,
-  TableCaption,
 } from "@/components/ui/table";
 
 const stats = [
@@ -149,7 +148,7 @@ export default function Stats() {
         <p>
           Or, don&apos;t, instead here is my progress in each of my hobbies.
         </p>
-        <p>(i.e. what I believe my progress is to reaching the "endgame" of this hobby)</p>
+        <p>(i.e. what I believe my progress is to reaching the &quot;endgame&quot; of this hobby)</p>
         <StatsTable />
         <p>
           Now, of course I could go deeper into the rabbit hole for all of these,

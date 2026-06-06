@@ -1,7 +1,23 @@
 import Panel from "@/app/components/panel";
-import { Bullet, Divider } from "@/app/components/shared";
+import { Bullet, Chip, Divider } from "@/app/components/shared";
 
 const experience = [
+  {
+    title: "Vendor Report Webapp",
+    org: "Freelance Software Developer, All Through The House",
+    location: "Okotoks, AB",
+    date: "Jan. 2026 – Present",
+    stack: ["Next.js", "TypeScript", "Prisma", "NeonDB", "Square SDK", "Playwright", "Axiom", "Resend"],
+    bullets: [
+      "Built and maintain a B2B web application that replaced admin-only reporting with self-serve vendor access",
+      "Integrated the Square SDK to ingest live transaction data, parsing and attributing over 7,000 orders into 10,000 vendor-specific entries for per-vendor reporting",
+      "Modeled the consignment workflow with Prisma over NeonDB Postgres, working around Square's lack of a native vendor concept to attribute sales across a shared storefront",
+      "Designed a role-based access system using separate vendor, admin, and unassigned permission groups, supporting users tied to multiple vendor accounts",
+      "Built interactive dashboards surfacing sales history and orders-over-time charts, replacing month-end manual reporting and eliminating an estimated 120+ weekly sales-data requests to the store owner",
+      "Ran UX surveys and used Playwright tests to fix onboarding and sign-in issues for non-technical users",
+      "Reduced API call latency from 500ms to 300ms (40%) through caching and query optimization",
+    ],
+  },
   {
     title: "Undergraduate Research Assistant",
     org: "Mount Royal University",
@@ -30,6 +46,11 @@ export default function Experience() {
               <span className="text-muted">{e.org}</span>
               <span className="text-muted">{e.location}</span>
             </div>
+            {"stack" in e && e.stack ? (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {e.stack.map((s) => <Chip key={s} label={s} />)}
+              </div>
+            ) : null}
             <ul className="mt-2 flex flex-col gap-1">
               {e.bullets.map((b) => <Bullet key={b} text={b} />)}
             </ul>

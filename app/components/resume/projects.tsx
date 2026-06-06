@@ -3,27 +3,14 @@ import { Bullet, Chip, Divider } from "@/app/components/shared";
 
 const projects = [
   {
-    title: "Vendor Report Webapp",
-    stack: ["Next.js", "TypeScript", "Bun", "PostgreSQL", "Square SDK", "Git"],
-    date: "Jan. 2026 – Present",
-    bullets: [
-      "Independently designing and building a full-stack web app for a pre-launch retail business, giving 20+ consignment vendors self-serve access to sales data previously only visible to store administrators",
-      "Integrated the Square API to ingest live transaction data, parsing and attributing ~2,000 orders into 3,500 vendor-specific entries for per-vendor reporting",
-      "Designed a PostgreSQL schema to model the store's unique consignment workflow, enabling accurate vendor-level attribution of shared-storefront sales",
-      "Implemented role-based authentication distinguishing vendor and admin accounts, ensuring vendors can only access their own private sales data",
-      "Built interactive dashboards surfacing sales history and orders-over-time charts, replacing a month-end manual reporting process with real-time visibility",
-      "Conducted user interviews with real vendors to validate UI decisions and iterate on pain points before launch",
-    ],
-  },
-  {
     title: "Stoa",
-    stack: ["React", "TypeScript", "Git", "Convex"],
+    stack: ["React", "TypeScript", "Tauri", "Convex", "TailwindCSS", "WorkOS"],
     date: "Mar. 2026 – Present",
     bullets: [
       "Shipped features incrementally alongside a team using Git branching workflows to keep parallel work conflict-free",
       "Translated feature requirements into tracked tasks via Agile sprints, managing scope across the team",
       "Prototyped UI flows and iterated with teammates through design reviews to refine the end-user experience",
-      "Strengthened code quality through regular code reviews and pair programming sessions",
+      "Built a file-upload system with a custom UI and status menu, serving resized copies to cut media costs by 80%",
       "Diagnosed and resolved cross-platform compatibility bugs spanning Windows, macOS, and Linux",
     ],
   },

@@ -1,6 +1,5 @@
 import { Download } from "lucide-react";
 import Panel from "../panel";
-import { Chip } from "../shared";
 
 export default function Resume() {
   return (

@@ -25,6 +25,7 @@
   --ring: oklch(0.556 0 0);
   --surface: #111111;
   --sunset: #fb923c;
+  --mint: #34d399;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -51,6 +52,7 @@
   --color-surface: var(--surface);
   --color-accent: var(--accent);
   --color-sunset: var(--sunset);
+  --color-mint: var(--mint);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
