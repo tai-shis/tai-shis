@@ -12,7 +12,7 @@ export default function Socials() {
   return (
     <Panel name="socials" className="p-4">
       <div className="flex flex-row justify-evenly">
-        <CopyButton label="Email" copyText="tshis070@mtroyal.ca" reactionText="Yoink" icon={<FaEnvelope size={14} />} />
+        <CopyButton label="Email" copyText="me@tai-shis.com" reactionText="Yoink" icon={<FaEnvelope size={14} />} />
         <CopyButton label="Discord" copyText="bookychan" reactionText="Yoinked" icon={<FaDiscord size={14} />} />
         {links.map(({ href, icon, label }) => (
           <a
