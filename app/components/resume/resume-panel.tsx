@@ -8,10 +8,10 @@ export default function ResumePanel() {
   return (
     <div className="w-full flex flex-col gap-4">
       <Resume />
-      <Skills />
+      <Education />
       <Experience />
       <Projects />
-      <Education />
+      <Skills />
     </div>
   );
 }

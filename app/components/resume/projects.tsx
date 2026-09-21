@@ -16,14 +16,14 @@ const projects = [
   },
   {
     title: "Urban Pulse",
-    stack: ["Next.js", "TypeScript", "Prisma", "NeonDB", "Ollama", "AWS S3"],
-    date: "Oct. 2025",
+    stack: ["Next.js", "Prisma", "PostgreSQL", "Ollama", "AWS S3"],
+    date: "Oct. 2025 – Oct. 2025",
     note: "Hack the Change 2025",
     bullets: [
-      "Built the backend in a 24-hour hackathon for a full-stack web app letting residents report and view urban infrastructure issues",
-      "Designed the Postgres schema with Prisma and NeonDB, and implemented authentication and session management with Neon Auth",
-      "Integrated AWS S3 for user-uploaded issue photos using presigned URLs for direct client-to-bucket uploads",
-      "Wired up API calls to a remote Ollama LLM hosted on a teammate's server, enabling AI-powered features without external API dependencies",
+      "Built the backend for Urban Pulse, an urban incident-reporting system, in a 4-person team during a hackathon focused on software for positive social impact",
+      "Enabled secure report CRUD and pagination by building a dozen type-safe Next.js server actions with per-user authorization and server-side validation",
+      "Designed a 1-to-5 star rating system with composite-key vote upserts, denormalizing each report's average rating for fast reads",
+      "Integrated a vision LLM (Llama 3.2 11B) via an OpenAI-compatible API, letting users report issues with just a photo – auto-generating descriptions with prompt engineering and moderation fallbacks",
     ],
   },
 ];

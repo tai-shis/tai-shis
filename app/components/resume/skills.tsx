@@ -5,9 +5,10 @@ type Item = [label: string, accent: boolean];
 
 const skills: { label: string; items: Item[] }[] = [
   { label: "languages",  items: [["JavaScript/TypeScript", true], ["Python", true], ["SQL", false], ["Java", false], ["C/C++", false], ["HTML/CSS", false], ["Assembly", false], ["Nix", false]] },
-  { label: "frameworks", items: [["React", true], ["Next.js", true], ["Express", false], ["Convex", false], ["NeonDB", false], ["Hono", false], ["WorkOS", false], ["Clerk", false]]},
-  { label: "tools",      items: [["Git", true], ["GitHub", false], ["VSCode", false], ["Postman", false], ["Emacs", false], ["Claude", false]] },
-  { label: "libraries",  items: [["TailwindCSS", false], ["NumPy", false], ["Matplotlib", false], ["Mongoose", false], ["Shadcn", false], ["BetterAuth", false], ["Playwright", false], ["Axiom", false]] },
+  { label: "frameworks", items: [["React", true], ["Next.js", true], ["Express", false], ["Convex", false], ["Neon", false], ["Prisma", false], ["Drizzle", false], ["Hono", false], ["WorkOS", false], ["Clerk", false]]},
+  { label: "tools",      items: [["Git", true], ["GitHub", false], ["VSCode", false], ["Postman", false], ["Emacs", false], ["Claude", false], ["Sentry", false]] },
+  { label: "testing",    items: [["Playwright", true], ["Vitest", true], ["Pytest", false], ["GitHub Actions", false]] },
+  { label: "libraries",  items: [["TailwindCSS", false], ["NumPy", false], ["Matplotlib", false], ["Mongoose", false], ["Shadcn", false], ["Radix UI", false], ["BetterAuth", false], ["Square SDK", false], ["Resend", false], ["Axiom", false]] },
 ];
 
 export default function Skills() {

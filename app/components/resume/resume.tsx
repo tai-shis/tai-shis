@@ -6,7 +6,7 @@ export default function Resume() {
     <Panel name="resume" className="p-4">
       <p className="pl-2 text-sm">
         <a
-          href="/Tai_Shishiba_Resume.pdf"
+          href="/Tai_Shishiba_SWE_Resume.pdf"
           download
           className="tui-panel p-2 float-right text-muted hover:text-sunset transition-colors hover:border-sunset"
           aria-label="Download resume"

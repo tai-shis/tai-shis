@@ -3,19 +3,17 @@ import { Bullet, Chip, Divider } from "@/app/components/shared";
 
 const experience = [
   {
-    title: "Vendor Report Webapp",
-    org: "Freelance Software Developer, All Through The House",
+    title: "Freelance Software Developer",
+    org: "All Through The House",
     location: "Okotoks, AB",
-    date: "Jan. 2026 – Present",
-    stack: ["Next.js", "TypeScript", "Prisma", "NeonDB", "Square SDK", "Playwright", "Axiom", "Resend"],
+    date: "Jan. 2026 – Current",
+    stack: ["Next.js", "Prisma", "PostgreSQL", "Square SDK", "Vitest"],
     bullets: [
-      "Built and maintain a B2B web application that replaced admin-only reporting with self-serve vendor access",
-      "Integrated the Square SDK to ingest live transaction data, parsing and attributing over 7,000 orders into 10,000 vendor-specific entries for per-vendor reporting",
-      "Modeled the consignment workflow with Prisma over NeonDB Postgres, working around Square's lack of a native vendor concept to attribute sales across a shared storefront",
-      "Designed a role-based access system using separate vendor, admin, and unassigned permission groups, supporting users tied to multiple vendor accounts",
-      "Built interactive dashboards surfacing sales history and orders-over-time charts, replacing month-end manual reporting and eliminating an estimated 120+ weekly sales-data requests to the store owner",
-      "Ran UX surveys and used Playwright tests to fix onboarding and sign-in issues for non-technical users",
-      "Reduced API call latency from 500ms to 300ms (40%) through caching and query optimization",
+      "Built and maintain a production B2B consignment-reporting platform, replacing manual admin reporting with self-serve vendor access across 30+ API routes and 14 data models",
+      "Cut 120+/week vendor sales-data and statement requests to the business owner, by designing an incremental statement-generation pipeline that converts Square transactions into per-vendor payout statements",
+      "Attributed 7,000+ Square orders into 15,000+ vendor-specific entries, by integrating the Square SDK and modeling a vendor concept absent from Square's native API",
+      "Cut analytics API latency 34% (532ms to 347ms), by batching five aggregation queries into a single SQL query with materialized CTEs",
+      "Built a 300-case Vitest suite across 28 modules with zero DB or network dependencies, wiring it into a GitHub Action for fast, deterministic CI runs",
     ],
   },
   {
@@ -23,6 +21,7 @@ const experience = [
     org: "Mount Royal University",
     location: "Calgary, AB",
     date: "May 2025 – Aug. 2025",
+    stack: ["Python", "NumPy", "Matplotlib", "LaTeX"],
     bullets: [
       "Built Python visualization pipelines using NumPy and Matplotlib to analyze simulation outputs for malware propagation research in wireless sensor networks",
       "Prototyped simulations using emerging research libraries to model malware spread patterns, enabling the team to evaluate new modeling approaches",

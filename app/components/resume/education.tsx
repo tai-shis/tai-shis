@@ -6,12 +6,12 @@ const education = [
     institution: "Mount Royal University",
     location: "Calgary, AB",
     degree: "Bachelor of Science in Computer Science",
-    date: "Sept. 2023 – Present",
+    date: "Sept. 2023 – Expected Apr. 2028",
     bullets: [
+      "Cumulative GPA: 3.91 / 4.00",
       "Dean's Honour Roll (6 consecutive semesters)",
       "President's Honour Roll (3 consecutive years)",
-      "Cumulative GPA: 3.91 / 4.00",
-      "Relevant Courses: Algorithms and Complexity, System Design, Introduction to Databases, Foundations: Software Engineering, Web Development for Computer Science, Computing Architecture and Machinery, Human-Computer Interaction",
+      "Relevant Courses: Algorithms and Complexity, System Design, Introduction to Databases, Software Engineering, Web Development, Operating Systems, Human-Computer Interaction, Artificial Intelligence",
     ],
   },
 ];
