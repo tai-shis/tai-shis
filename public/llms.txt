@@ -1,0 +1,21 @@
+# tai-shis
+
+> Personal site of Tai Shishiba, a computer science student at Mount Royal University. 
+> The whole site is available as plain markdown over curl.
+
+To read it, curl the site:
+
+```
+curl https://tai-shis.com
+```
+
+Any path that isn't listed below returns the whole site.
+
+## Sections
+
+- [home](https://tai-shis.com/home): me, socials, about, propaganda
+- [projects](https://tai-shis.com/projects): things I've built
+- [resume](https://tai-shis.com/resume): education, experience, projects, technical skills
+- [hobbies](https://tai-shis.com/hobbies): hobby progress stats
+
+Example: `curl https://tai-shis.com/resume`
