@@ -1,0 +1,31 @@
+# Everything under /public is served from the site root, so block those paths for all crawlers.
+User-Agent: *
+Allow: /
+Disallow: /*.pdf$
+Disallow: /Tai_Shishiba_Resume.pdf
+Disallow: /Tai_Shishiba_SWE_Resume.pdf
+Disallow: /vendor-reports/
+
+# LLM crawlers: may read pages, but not the /public files.
+User-Agent: GPTBot
+User-Agent: ChatGPT-User
+User-Agent: OAI-SearchBot
+User-Agent: ClaudeBot
+User-Agent: Claude-User
+User-Agent: Claude-SearchBot
+User-Agent: anthropic-ai
+User-Agent: Google-Extended
+User-Agent: PerplexityBot
+User-Agent: Applebot-Extended
+User-Agent: meta-externalagent
+Allow: /
+Disallow: /*.pdf$
+Disallow: /Tai_Shishiba_Resume.pdf
+Disallow: /Tai_Shishiba_SWE_Resume.pdf
+Disallow: /vendor-reports/
+
+# Bulk scrapers: blocked entirely.
+User-Agent: CCBot
+User-Agent: Bytespider
+User-Agent: Amazonbot
+Disallow: /
