@@ -6,7 +6,7 @@ export default function Stoa() {
       panelName="stoa"
       description="A private communication platform built with a focus on privacy."
       tags={["TypeScript", "React", "Convex", "Rust", "Tauri", "Cloudflare R2"]}
-      link="https://stoa.gg"
+      link="https://rocky.systems"
       personal={true}
       wip={true}
     />

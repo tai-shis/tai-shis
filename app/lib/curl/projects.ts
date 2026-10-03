@@ -13,7 +13,7 @@ A private communication platform built with a focus on privacy.
 
 - **type:** *personal project*, *WIP*
 - **stack:** TypeScript, React, Convex, Rust, Tauri, Cloudflare R2
-- **link:** https://stoa.gg
+- **link:** https://rocky.systems
 `,
 
   urbanPulse: `### urban-pulse

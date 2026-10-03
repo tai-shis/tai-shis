@@ -23,7 +23,7 @@ export default function Me({ asciiText }: { asciiText: string }) {
       </pre>
       <div className="flex-1 min-w-0 w-full p-2 sm:pt-2 pt-0  text-sm text-muted flex flex-col gap-1 items-center sm:items-start self-center">
         <p className="flex items-center gap-2">
-          <CodeXml size={14} />Currently <AnimatedVerb verb={verb} /> @ <a href="https://stoa.gg" target="_blank" rel="noopener noreferrer" className="hover:underline no-underline">stoa.gg</a>
+          <CodeXml size={14} />Currently <AnimatedVerb verb={verb} /> @ <a href="https://rocky.systems" target="_blank" rel="noopener noreferrer" className="hover:underline no-underline">rocky.systems</a>
         </p>
         <p className="flex items-center gap-2">
           <GraduationCap size={14} />Studying Computer Science @ <a href="https://mtroyal.ca" target="_blank" rel="noopener noreferrer" className="hover:underline no-underline">MRU</a>

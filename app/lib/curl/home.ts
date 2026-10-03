@@ -1,7 +1,7 @@
 export const home = {
   me: `### me
 
-- Currently {{verb}} @ [stoa.gg](https://stoa.gg)
+- Currently {{verb}} @ [rocky.systems](https://rocky.systems)
 - Studying Computer Science @ [MRU](https://mtroyal.ca)
 - Bragg Creek, Alberta
 `,
