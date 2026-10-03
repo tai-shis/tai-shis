@@ -1,3 +1,5 @@
+import { vouches } from "@/app/lib/vouches";
+
 export const home = {
   me: `### me
 
@@ -38,5 +40,10 @@ By the way, you should also get a [Framework](https://frame.work) laptop.
 The 13 Pro is soon to come...
 
 Also, NixOS on the desktop is on the way. I'm just ~~lazy~~ :3c
+`,
+
+  vouches: `### vouches
+
+${vouches.map(({ name, url, blurb }) => `- [${name}](${url})${blurb ? ` - ${blurb}` : ""}`).join("\n")}
 `,
 };

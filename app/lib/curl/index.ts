@@ -11,7 +11,7 @@ const footer = `---
 
 // Page order and headings mirror the site's nav.
 const pages: { slug: string; title: string; sections: string[] }[] = [
-  { slug: "home", title: "[1] home", sections: [home.me, home.socials, home.about, home.propaganda] },
+  { slug: "home", title: "[1] home", sections: [home.me, home.socials, home.about, home.propaganda, home.vouches] },
   {
     slug: "projects",
     title: "[2] projects",
