@@ -10,6 +10,7 @@ export default function Me({ asciiText }: { asciiText: string }) {
   const [verb, setVerb] = useState(randomVerb());
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const interval = setInterval(() => {
       setVerb(randomVerb());
     }, 5000);
@@ -23,10 +24,10 @@ export default function Me({ asciiText }: { asciiText: string }) {
       </pre>
       <div className="flex-1 min-w-0 w-full p-2 sm:pt-2 pt-0  text-sm text-muted flex flex-col gap-1 items-center sm:items-start self-center">
         <p className="flex items-center gap-2">
-          <CodeXml size={14} />Currently <AnimatedVerb verb={verb} /> @ <a href="https://rocky.systems" target="_blank" rel="noopener noreferrer" className="hover:underline no-underline">rocky.systems</a>
+          <CodeXml size={14} />Currently <AnimatedVerb verb={verb} /> @ <a href="https://rocky.systems" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-muted/50 hover:text-accent hover:decoration-current transition-colors">rocky.systems</a>
         </p>
         <p className="flex items-center gap-2">
-          <GraduationCap size={14} />Studying Computer Science @ <a href="https://mtroyal.ca" target="_blank" rel="noopener noreferrer" className="hover:underline no-underline">MRU</a>
+          <GraduationCap size={14} />Studying Computer Science @ <a href="https://mtroyal.ca" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-muted/50 hover:text-accent hover:decoration-current transition-colors">MRU</a>
         </p>
         <p className="flex items-center gap-2">
           <MapPin size={14} />Bragg Creek, Alberta

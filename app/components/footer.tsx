@@ -21,17 +21,19 @@ export default function Footer() {
   const commitURL = commit ? `https://github.com/tai-shis/tai-shis.com/commit/${commit}` : '';
 
   return (
-    <Panel name="footer" className="flex items-center px-4 py-2 text-sm text-muted relative z-10">
-      <span className="p-2">© 2026 - tai-shis</span>
-      <a href={commitURL} target="_blank" rel="noopener noreferrer" className="hover:text-sunset transition-colors p-2 flex flex-row items-center justify-center gap-1 ml-auto">
-        <GitPullRequest size={16}/> {shortCommit ?? "—"}
-      </a>
-      <span className="absolute bottom-0 left-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
-        [1: Home | 2: Projects | 3: Resume | 4: Hobbies]
-      </span>
-      <span className="absolute bottom-0 right-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
-        [↑/↓ Panel | ←/→ Scroll]
-      </span>
-    </Panel>
+    <footer>
+      <Panel name="footer" heading={false} className="flex items-center px-4 py-2 text-sm text-muted relative z-10">
+        <span className="p-2">© 2026 - tai-shis</span>
+        <a href={commitURL} target="_blank" rel="noopener noreferrer" className="hover:text-sunset transition-colors p-2 flex flex-row items-center justify-center gap-1 ml-auto">
+          <GitPullRequest size={16}/> {shortCommit ?? "—"}
+        </a>
+        <span className="absolute bottom-0 left-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
+          [1: Home | 2: Projects | 3: Resume | 4: Hobbies]
+        </span>
+        <span className="absolute bottom-0 right-3 translate-y-1/2 bg-background px-1.5 text-muted text-xs font-mono transition-colors group-hover:text-accent hidden sm:block">
+          [↑/↓ Panel | ←/→ Scroll]
+        </span>
+      </Panel>
+    </footer>
   );
 }

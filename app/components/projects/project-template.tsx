@@ -1,12 +1,12 @@
 import Panel from "@/app/components/panel";
-import ImagePreview from "@/app/components/projects/image-preview";
+import ImagePreview, { type PreviewImage } from "@/app/components/projects/image-preview";
 import { ExternalLink } from "lucide-react";
 
 interface ProjectTemplateProps {
   panelName: string;
   description: string;
   tags: string[];
-  images?: string[];
+  images?: PreviewImage[];
   link?: string;
   school?: boolean;
   hackathon?: boolean;
@@ -24,9 +24,10 @@ export default function ProjectTemplate({ panelName, description, tags, images, 
           href={link}
           target="_blank"
           rel="noopener noreferrer"
+          aria-label={`Open ${panelName}`}
           className="absolute top-4 right-4 text-muted hover:text-accent transition-colors"
         >
-          <ExternalLink size={18} />
+          <ExternalLink size={18} aria-hidden="true" />
         </a>
       )}
       <div className="px-2 flex flex-col gap-3">

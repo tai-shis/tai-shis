@@ -19,7 +19,7 @@ const stats = [
     shortname: "Keyboards",
     longname: "Mechanical Keyboards",
     progress: 95,
-    tooltip: "No, you cant eat the Krytox",
+    tooltip: "No, you can't eat the Krytox",
   },
   {
     HID: 432,
@@ -62,7 +62,7 @@ function ProgressBar({ value, bars = 20, hovered = false, className }: { value: 
   const clamped = Math.max(0, Math.min(100, value));
   const filled = Math.round((clamped / 100) * bars);
   return (
-    <span className={`font-mono inline-flex items-center gap-1 transition-colors ${hovered ? "text-sunset" : "text-muted"} ${className ?? ""}`}>
+    <span aria-hidden="true" className={`font-mono inline-flex items-center gap-1 transition-colors ${hovered ? "text-sunset" : "text-muted"} ${className ?? ""}`}>
       <span>{"█".repeat(filled)}{"░".repeat(bars - filled)}</span>
     </span>
   );
@@ -72,15 +72,23 @@ function HIDCell({ hid, tooltip }: { hid: number; tooltip: string }) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   return (
     <span
+      tabIndex={0}
       className="cursor-default"
       onMouseMove={(e) => setPos({ x: e.clientX, y: e.clientY })}
       onMouseLeave={() => setPos(null)}
+      onFocus={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setPos({ x: rect.left, y: rect.bottom });
+      }}
+      onBlur={() => setPos(null)}
     >
       <div className="text-right">
         {hid}
       </div>
+      <span className="sr-only">{tooltip}</span>
       {pos && createPortal(
         <span
+          aria-hidden="true"
           className="fixed z-50 pointer-events-none"
           style={{ left: pos.x + 12, top: pos.y + 12 }}
         >
@@ -111,8 +119,9 @@ function StatsRow({ stat }: { stat: typeof stats[0] }) {
       <TableCell>
         <ProgressBar value={stat.progress} bars={13} hovered={hovered} className="sm:hidden!" />
         <ProgressBar value={stat.progress} bars={30} hovered={hovered} className="hidden! sm:inline-flex!" />
+        <span className="sr-only">{stat.progress}%</span>
       </TableCell>
-      <TableCell className={`${text} transition-colors text-right hidden sm:table-cell`}>
+      <TableCell aria-hidden="true" className={`${text} transition-colors text-right hidden sm:table-cell`}>
         {stat.progress}%
       </TableCell>
     </TableRow>
@@ -128,7 +137,7 @@ function StatsTable() {
             <TableHead className="text-muted group-hover:text-accent transition-colors">HID</TableHead>
             <TableHead className="text-muted group-hover:text-accent transition-colors">Name</TableHead>
             <TableHead className="text-muted group-hover:text-accent transition-colors">Progress</TableHead>
-            <TableHead className="text-muted group-hover:text-accent transition-colors hidden sm:table-cell"></TableHead>
+            <TableHead aria-hidden="true" className="text-muted group-hover:text-accent transition-colors hidden sm:table-cell"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="[&_tr]:border-0">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { shouldIgnoreShortcut } from "@/app/lib/shortcuts";
 
 const GAP = 16;
 const PANEL_SNAP_OFFSET = 8; // px gap kept above panel top when snapping (matches pt-2)
@@ -17,7 +18,7 @@ interface PageCarouselProps {
 }
 
 export default function PageCarousel({ index, onNavigate, children }: PageCarouselProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [slideWidth, setSlideWidth] = useState(0);
@@ -53,7 +54,7 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (shouldIgnoreShortcut(e)) return;
       if (e.key === "ArrowLeft") { goToIndex(destRef.current - 1); return; }
       if (e.key === "ArrowRight") { goToIndex(destRef.current + 1); return; }
       if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
@@ -70,13 +71,14 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
         p => p.getBoundingClientRect().top - containerTop + scrollEl.scrollTop - PANEL_SNAP_OFFSET
       );
       const cur = scrollEl.scrollTop;
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
       if (e.key === "ArrowDown") {
         const next = panelTops.find(t => t > cur + 2);
-        if (next !== undefined) scrollEl.scrollTo({ top: Math.max(0, next), behavior: "smooth" });
+        if (next !== undefined) scrollEl.scrollTo({ top: Math.max(0, next), behavior });
       } else {
         const prev = [...panelTops].reverse().find(t => t < cur - 2);
-        scrollEl.scrollTo({ top: Math.max(0, prev ?? 0), behavior: "smooth" });
+        scrollEl.scrollTo({ top: Math.max(0, prev ?? 0), behavior });
       }
     };
     window.addEventListener("keydown", handler);
@@ -186,7 +188,7 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
   const translateX = slideWidth > 0 ? -(index * (slideWidth + GAP)) : 0;
 
   return (
-    <div
+    <main
       ref={containerRef}
       className="flex-1 min-h-0 overflow-visible"
       style={{ touchAction: "pan-y" }}
@@ -204,6 +206,7 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
         {slides.map((slide, i) => (
           <div
             key={i}
+            onClick={() => goToIndex(i)}
             className="shrink-0 h-full"
             style={{
               width: slideWidth > 0 ? slideWidth : "100%",
@@ -211,9 +214,10 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
               transition: OPACITY_TRANSITION,
             }}
           >
+            {/* inert also blocks pointer hits, so clicks on a dimmed slide fall through to the wrapper above */}
             <div
               ref={(el) => { scrollRefs.current[i] = el; }}
-              onClick={() => goToIndex(i)}
+              inert={i !== index}
               className="h-full overflow-y-auto no-scrollbar pt-2"
             >
               {slide}
@@ -221,6 +225,6 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
           </div>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

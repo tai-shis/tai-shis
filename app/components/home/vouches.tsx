@@ -13,7 +13,7 @@ export default function Vouches() {
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-accent transition-colors"
+                className="underline underline-offset-4 decoration-muted/50 hover:text-accent hover:decoration-current transition-colors"
               >
                 {name}
               </a>

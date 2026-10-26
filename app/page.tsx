@@ -8,6 +8,7 @@ import Footer from "@/app/components/footer";
 export default function Home() {
   return (
     <div className="w-full max-w-3xl mx-auto flex flex-col h-full px-4 py-8 gap-4">
+      <h1 className="sr-only">Tai Shishiba</h1>
       <Shell>
         <HomePanel />
         <ProjectsPanel />

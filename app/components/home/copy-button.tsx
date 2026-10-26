@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface CopyButtonProps {
   label: string;
@@ -9,6 +9,8 @@ interface CopyButtonProps {
   icon?: React.ReactNode;
   className?: string;
 }
+
+type Status = "idle" | "copied" | "failed";
 
 function burst(x: number, y: number) {
   for (let i = 0; i < 12; i++) {
@@ -28,22 +30,44 @@ function burst(x: number, y: number) {
 }
 
 export default function CopyButton({ label, copyText, reactionText, icon, className }: CopyButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<Status>("idle");
+  const resetTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const handleClick = async (e: React.MouseEvent) => {
-    await navigator.clipboard.writeText(copyText);
-    burst(e.clientX, e.clientY);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
+  const showStatus = (next: Status, ms: number) => {
+    clearTimeout(resetTimer.current);
+    setStatus(next);
+    resetTimer.current = setTimeout(() => setStatus("idle"), ms);
   };
 
+  const handleClick = async (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    try {
+      await navigator.clipboard.writeText(copyText);
+      burst(clientX, clientY);
+      showStatus("copied", 1000);
+    } catch {
+      showStatus("failed", 5000);
+    }
+  };
+
+  const visibleText = { idle: label, copied: reactionText, failed: copyText }[status];
+  const announcement = {
+    idle: "",
+    copied: `${label} copied`,
+    failed: `Couldn't copy. ${label}: ${copyText}`,
+  }[status];
+
   return (
-    <button
-      onClick={handleClick}
-      className={`inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors cursor-pointer ${className ?? ""}`}
-    >
-      {icon}
-      <span className="hidden sm:inline">{copied ? reactionText : label}</span>
-    </button>
+    <>
+      <button
+        onClick={handleClick}
+        aria-label={label}
+        className={`inline-flex items-center gap-2 text-sm text-muted hover:text-accent transition-colors cursor-pointer ${className ?? ""}`}
+      >
+        {icon}
+        <span className={status === "idle" ? "sr-only sm:not-sr-only" : ""}>{visibleText}</span>
+      </button>
+      <span role="status" className="sr-only">{announcement}</span>
+    </>
   );
 }
