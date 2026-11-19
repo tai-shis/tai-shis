@@ -43,3 +43,12 @@ export const RoleChangeFailed: Story = {
     await expect(await canvas.findByRole("alert")).toHaveTextContent("Unable to change @octocat's role. Try again.");
   },
 };
+
+export const RefreshFailed: Story = {
+  args: { loadError: "Unable to load users. Reopen the dialog to try again." },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("alert")).toBeInTheDocument();
+    await expect(canvas.getByText("@octocat")).toBeInTheDocument();
+  },
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import UsersList, { type AdminUser, type Role } from "@/app/components/auth/admin/users-list";
 import ApiKeys, { type ApiKeySummary } from "@/app/components/auth/admin/api-keys";
 import { authClient } from "@/app/lib/auth-client";
@@ -50,19 +50,27 @@ function useLoadedList<T>(fetchList: () => Promise<LoadResult<T>>) {
     setItems(result.items);
   }, []);
 
-  useEffect(() => {
-    let isCurrent = true;
-    fetchList().then((result) => {
-      if (isCurrent) applyResult(result);
+  // Every fetch takes a ticket; only the newest one may update state, so a slow, older
+  // response can't overwrite fresher data. Unmounting bumps the ticket to drop everything in flight.
+  const latestTicket = useRef(0);
+
+  const fetchLatest = useCallback(() => {
+    const ticket = ++latestTicket.current;
+    return fetchList().then((result) => {
+      if (ticket === latestTicket.current) applyResult(result);
     });
-    return () => {
-      isCurrent = false;
-    };
   }, [fetchList, applyResult]);
 
-  const reload = useCallback(async () => applyResult(await fetchList()), [fetchList, applyResult]);
+  const dropInFlight = useCallback(() => {
+    latestTicket.current++;
+  }, []);
 
-  return { items, loadError, reload };
+  useEffect(() => {
+    fetchLatest();
+    return dropInFlight;
+  }, [fetchLatest, dropInFlight]);
+
+  return { items, loadError, reload: fetchLatest };
 }
 
 function useUsers() {

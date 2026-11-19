@@ -2,9 +2,8 @@
 
 import { useId, useState } from "react";
 import Panel from "@/app/components/panel";
+import { actionClass } from "@/app/components/auth/action-class";
 import CopyButton from "@/app/components/copy-button";
-
-const actionClass = "px-2 py-1 text-sm text-muted hover:text-accent transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60";
 
 export type ApiKeySummary = {
   id: string;
@@ -25,7 +24,8 @@ export type ApiKeysProps = {
 };
 
 function formatDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  // en-CA formats as YYYY-MM-DD, in the viewer's time zone.
+  return date.toLocaleDateString("en-CA");
 }
 
 export default function ApiKeys({ keys, loadError, onCreate, onRevoke }: ApiKeysProps) {
@@ -105,16 +105,17 @@ function NewKeyNotice({ secret, onDone }: { secret: string; onDone: () => void }
 }
 
 function KeyList({ keys, loadError, onRevoke }: Pick<ApiKeysProps, "keys" | "loadError" | "onRevoke">) {
-  if (loadError) return <p role="alert" className="text-sm text-destructive px-2">{loadError}</p>;
-  if (!keys) return <p className="text-sm text-muted px-2">Loading keys...</p>;
-  if (keys.length === 0) {
-    return <p className="text-sm text-muted px-2">No API keys yet. Create one to call protected endpoints from scripts.</p>;
-  }
+  const errorNotice = loadError && <p role="alert" className="text-sm text-destructive px-2">{loadError}</p>;
+  if (!keys) return errorNotice || <p className="text-sm text-muted px-2">Loading keys...</p>;
+  if (keys.length === 0) return errorNotice || <p className="text-sm text-muted px-2">No API keys yet. Create one with the form above.</p>;
 
   return (
-    <ul className="flex flex-col text-sm text-muted">
-      {keys.map((key) => <KeyRow key={key.id} apiKey={key} onRevoke={onRevoke} />)}
-    </ul>
+    <>
+      {errorNotice}
+      <ul className="flex flex-col text-sm text-muted">
+        {keys.map((key) => <KeyRow key={key.id} apiKey={key} onRevoke={onRevoke} />)}
+      </ul>
+    </>
   );
 }
 

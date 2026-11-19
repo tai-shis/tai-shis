@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Panel from "@/app/components/panel";
-
-const actionClass = "px-2 py-1 text-sm text-muted hover:text-accent transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60";
+import { actionClass } from "@/app/components/auth/action-class";
 
 export type Role = "admin" | "user";
 
@@ -32,26 +31,29 @@ export default function UsersList({ users, loadError, currentUserId, onSetRole }
 }
 
 function UsersListBody({ users, loadError, currentUserId, onSetRole }: UsersListProps) {
-  if (loadError) return <p role="alert" className="text-sm text-destructive px-2">{loadError}</p>;
-  if (!users) return <p className="text-sm text-muted px-2">Loading users...</p>;
-  if (users.length === 0) return <p className="text-sm text-muted px-2">No users yet.</p>;
+  const errorNotice = loadError && <p role="alert" className="text-sm text-destructive px-2">{loadError}</p>;
+  if (!users) return errorNotice || <p className="text-sm text-muted px-2">Loading users...</p>;
+  if (users.length === 0) return errorNotice || <p className="text-sm text-muted px-2">No users yet.</p>;
 
   return (
-    <table className="w-full text-sm text-muted">
-      <thead>
-        <tr className="text-left">
-          <th scope="col" className="px-2 py-1 font-normal">user</th>
-          <th scope="col" className="px-2 py-1 font-normal">country</th>
-          <th scope="col" className="px-2 py-1 font-normal">role</th>
-          <th scope="col" className="px-2 py-1 font-normal sr-only">actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((user) => (
-          <UserRow key={user.id} user={user} isCurrentUser={user.id === currentUserId} onSetRole={onSetRole} />
-        ))}
-      </tbody>
-    </table>
+    <>
+      {errorNotice}
+      <table className="w-full text-sm text-muted">
+        <thead>
+          <tr className="text-left">
+            <th scope="col" className="px-2 py-1 font-normal">user</th>
+            <th scope="col" className="px-2 py-1 font-normal">country</th>
+            <th scope="col" className="px-2 py-1 font-normal">role</th>
+            <th scope="col" className="px-2 py-1 font-normal sr-only">actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <UserRow key={user.id} user={user} isCurrentUser={user.id === currentUserId} onSetRole={onSetRole} />
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }
 

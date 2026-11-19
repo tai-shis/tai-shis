@@ -4,6 +4,7 @@ import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/a
 import { nextCookies } from "better-auth/next-js";
 import { admin } from "better-auth/plugins";
 import { apiKey } from "@better-auth/api-key";
+import { eq } from "drizzle-orm";
 import { db } from "@/app/lib/db";
 import * as schema from "@/app/lib/db/schema";
 
@@ -17,6 +18,10 @@ function countryFrom(headers: Headers | undefined): string | null {
   return value && COUNTRY_CODE.test(value) ? value : null;
 }
 
+async function revokeApiKeys(userId: string) {
+  await db.delete(schema.apikey).where(eq(schema.apikey.referenceId, userId));
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   socialProviders: {
@@ -24,6 +29,7 @@ export const auth = betterAuth({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
       disableDefaultScope: true,
+      overrideUserInfoOnSignIn: true,
       mapProfileToUser: (profile) => ({
         name: profile.login,
         email: `${profile.id}@${PLACEHOLDER_EMAIL_DOMAIN}`,
@@ -43,6 +49,15 @@ export const auth = betterAuth({
         before: async (user, ctx) => ({
           data: { ...user, country: countryFrom(ctx?.headers) },
         }),
+      },
+      // API keys are admin-only, so losing the role or the account revokes every key the user owns.
+      update: {
+        after: async (user) => {
+          if (typeof user.role === "string" && user.role !== "admin") await revokeApiKeys(user.id);
+        },
+      },
+      delete: {
+        after: async (user) => revokeApiKeys(user.id),
       },
     },
     session: {

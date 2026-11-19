@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "radix-ui";
 import { FaGithub } from "react-icons/fa";
 import Panel from "@/app/components/panel";
+import { actionClass } from "@/app/components/auth/action-class";
 import AnimatedText from "@/app/components/animated-text";
-
-const actionClass = "inline-flex items-center gap-2 px-2 py-1 text-sm text-muted hover:text-accent transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60";
 
 export type Account = { username: string };
 
@@ -55,6 +54,16 @@ export default function AuthDialogView({ account, isPending, onSignIn, onSignOut
 function SignedOut({ onSignIn }: { onSignIn: () => Promise<boolean> }) {
   const [isStarting, setIsStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // A successful sign-in leaves the button disabled while the browser redirects. If the user comes
+  // back with Back, the page is restored from the back-forward cache in that state, so re-enable it.
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setIsStarting(false);
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   const handleSignIn = async () => {
     setError(null);

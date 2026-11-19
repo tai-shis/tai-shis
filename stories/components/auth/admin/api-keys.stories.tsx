@@ -79,3 +79,12 @@ export const RevokeFailed: Story = {
     await expect(await canvas.findByRole("alert")).toHaveTextContent("Unable to revoke laptop-cli. Try again.");
   },
 };
+
+export const RefreshFailed: Story = {
+  args: { loadError: "Unable to load API keys. Reopen the dialog to try again." },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("alert")).toBeInTheDocument();
+    await expect(canvas.getByText("laptop-cli")).toBeInTheDocument();
+  },
+};
