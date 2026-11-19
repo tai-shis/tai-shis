@@ -8,6 +8,20 @@
       "when": 1795063733825,
       "tag": "0000_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795064094447,
+      "tag": "0001_user_username",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795065351267,
+      "tag": "0002_drop_username",
+      "breakpoints": true
     }
   ]
 }
