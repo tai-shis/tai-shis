@@ -22,6 +22,13 @@
       "when": 1795065351267,
       "tag": "0002_drop_username",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795128785629,
+      "tag": "0003_profile",
+      "breakpoints": true
     }
   ]
 }
