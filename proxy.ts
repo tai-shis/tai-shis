@@ -16,6 +16,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Everything except _next internals and real files (robots.txt, pdfs, images...).
-  matcher: "/((?!_next|.*\\..*).*)",
+  // Everything except _next internals, API routes, and real files (robots.txt, pdfs, images...).
+  matcher: "/((?!_next|api/|.*\\..*).*)",
 };

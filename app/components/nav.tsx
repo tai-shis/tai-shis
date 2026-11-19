@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Panel from "@/app/components/panel";
+import AuthDialog from "@/app/components/auth/auth-dialog";
 import { shouldIgnoreShortcut } from "@/app/lib/shortcuts";
 
 const labels = ["home", "projects", "resume", "hobbies"];
@@ -23,8 +24,8 @@ export default function Nav({ index, onNavigate }: NavProps) {
   }, [onNavigate]);
 
   return (
-    <nav aria-label="Sections">
-      <Panel name="nav" heading={false} className="flex gap-0 z-10">
+    <Panel name="nav" heading={false} className="flex items-center gap-0 z-10">
+      <nav aria-label="Sections" className="flex">
         {labels.map((label, i) => (
           <button
             key={label}
@@ -38,7 +39,10 @@ export default function Nav({ index, onNavigate }: NavProps) {
             {label}
           </button>
         ))}
-      </Panel>
-    </nav>
+      </nav>
+      <div className="ml-auto hidden sm:block">
+        <AuthDialog />
+      </div>
+    </Panel>
   );
 }
