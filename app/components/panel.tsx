@@ -1,5 +1,5 @@
 interface PanelProps {
-  name: string;
+  name: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
   active?: boolean;

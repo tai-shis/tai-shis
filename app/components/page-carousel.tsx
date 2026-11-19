@@ -2,22 +2,38 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { shouldIgnoreShortcut } from "@/app/lib/shortcuts";
+import { SLIDE_DURATION_MS, SLIDE_EASING } from "@/app/lib/motion";
 
 const GAP = 16;
 const PANEL_SNAP_OFFSET = 8; // px gap kept above panel top when snapping (matches pt-2)
 const INACTIVE_OPACITY = 0.3;
 const SWIPE_THRESHOLD = 0.3;
 const EDGE_RESISTANCE = 0.3;
-const TRANSITION = "transform 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-const OPACITY_TRANSITION = "opacity 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+const TRANSITION = `transform ${SLIDE_DURATION_MS}ms ${SLIDE_EASING}`;
+const OPACITY_TRANSITION = `opacity ${SLIDE_DURATION_MS}ms ${SLIDE_EASING}`;
+
+/** An element outside the carousel that also accepts swipes, at its own finger distance per page. */
+export interface SwipeSurface {
+  ref: React.RefObject<HTMLElement | null>;
+  getPagePixels: () => number;
+}
 
 interface PageCarouselProps {
   index: number;
   onNavigate: (i: number) => void;
+  /** Fractional page index while a swipe is in progress, null once it ends. */
+  onDragPositionChange: (position: number | null) => void;
+  swipeSurface: SwipeSurface;
   children: React.ReactNode;
 }
 
-export default function PageCarousel({ index, onNavigate, children }: PageCarouselProps) {
+export default function PageCarousel({
+  index,
+  onNavigate,
+  onDragPositionChange,
+  swipeSurface,
+  children,
+}: PageCarouselProps) {
   const containerRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const scrollRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -34,6 +50,12 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
 
   const slideWidthRef = useRef(slideWidth);
   useEffect(() => { slideWidthRef.current = slideWidth; }, [slideWidth]);
+
+  // Read through a ref so a new callback identity never re-binds the touch listeners mid-drag.
+  const onDragPositionChangeRef = useRef(onDragPositionChange);
+  useEffect(() => { onDragPositionChangeRef.current = onDragPositionChange; }, [onDragPositionChange]);
+  const swipeSurfaceRef = useRef(swipeSurface);
+  useEffect(() => { swipeSurfaceRef.current = swipeSurface; }, [swipeSurface]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -94,6 +116,7 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
     let startY = 0;
     let isHorizontal: boolean | null = null;
     let dragBaseX = 0; // actual mid-animation position when drag started
+    let trackPixelsPerFingerPixel = 1;
 
     const destBaseX = () => -(destRef.current * (slideWidthRef.current + GAP));
 
@@ -114,7 +137,8 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
       });
     };
 
-    const onStart = (e: TouchEvent) => {
+    const startDrag = (e: TouchEvent, fingerPixelsPerPage: number) => {
+      trackPixelsPerFingerPixel = fingerPixelsPerPage > 0 ? (slideWidthRef.current + GAP) / fingerPixelsPerPage : 1;
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
       isHorizontal = null;
@@ -135,18 +159,20 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
       if (isHorizontal === null && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
         isHorizontal = Math.abs(dx) > Math.abs(dy);
         if (!isHorizontal) {
-          track.style.transition = TRANSITION;
-          slideEls().forEach(el => { el.style.transition = OPACITY_TRANSITION; });
+          restoreTransitions();
+          snapBack();
         }
       }
       if (!isHorizontal) return;
       e.preventDefault();
 
-      const atStart = destRef.current === 0 && dx > 0;
-      const atEnd = destRef.current === slides.length - 1 && dx < 0;
-      const effectiveDx = (atStart || atEnd) ? dx * EDGE_RESISTANCE : dx;
+      const trackDx = dx * trackPixelsPerFingerPixel;
+      const atStart = destRef.current === 0 && trackDx > 0;
+      const atEnd = destRef.current === slides.length - 1 && trackDx < 0;
+      const effectiveDx = (atStart || atEnd) ? trackDx * EDGE_RESISTANCE : trackDx;
 
       track.style.transform = `translateX(${dragBaseX + effectiveDx}px)`;
+      onDragPositionChangeRef.current(-(dragBaseX + effectiveDx) / (slideWidthRef.current + GAP));
 
       // Opacity: proportion of how far the drag is from the destination position
       const dist = Math.abs((dragBaseX + effectiveDx) - destBaseX());
@@ -157,11 +183,21 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
       setOpacities(1 - progress * (1 - INACTIVE_OPACITY), targetIdx, INACTIVE_OPACITY + progress * (1 - INACTIVE_OPACITY));
     };
 
-    const onEnd = (e: TouchEvent) => {
+    const restoreTransitions = () => {
       track.style.transition = TRANSITION;
       slideEls().forEach(el => { el.style.transition = OPACITY_TRANSITION; });
+    };
+
+    const snapBack = () => {
+      track.style.transform = `translateX(${destBaseX()}px)`;
+      restoreOpacities();
+    };
+
+    const onEnd = (e: TouchEvent) => {
+      restoreTransitions();
       if (!isHorizontal) return;
-      const dx = e.changedTouches[0].clientX - startX;
+      onDragPositionChangeRef.current(null);
+      const dx = (e.changedTouches[0].clientX - startX) * trackPixelsPerFingerPixel;
       const threshold = slideWidthRef.current * SWIPE_THRESHOLD;
 
       if (Math.abs(dx) > threshold) {
@@ -171,17 +207,36 @@ export default function PageCarousel({ index, onNavigate, children }: PageCarous
           return;
         }
       }
-      track.style.transform = `translateX(${destBaseX()}px)`;
-      restoreOpacities();
+      snapBack();
     };
 
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove", onMove, { passive: false });
-    el.addEventListener("touchend", onEnd, { passive: true });
+    const onCancel = () => {
+      restoreTransitions();
+      if (!isHorizontal) return;
+      onDragPositionChangeRef.current(null);
+      snapBack();
+    };
+
+    const onContentStart = (e: TouchEvent) => startDrag(e, slideWidthRef.current + GAP);
+    const onSurfaceStart = (e: TouchEvent) => startDrag(e, swipeSurfaceRef.current.getPagePixels());
+
+    const bindings: [HTMLElement, (e: TouchEvent) => void][] = [[el, onContentStart]];
+    const surfaceEl = swipeSurfaceRef.current.ref.current;
+    if (surfaceEl) bindings.push([surfaceEl, onSurfaceStart]);
+
+    for (const [target, onStart] of bindings) {
+      target.addEventListener("touchstart", onStart, { passive: true });
+      target.addEventListener("touchmove", onMove, { passive: false });
+      target.addEventListener("touchend", onEnd, { passive: true });
+      target.addEventListener("touchcancel", onCancel, { passive: true });
+    }
     return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-      el.removeEventListener("touchend", onEnd);
+      for (const [target, onStart] of bindings) {
+        target.removeEventListener("touchstart", onStart);
+        target.removeEventListener("touchmove", onMove);
+        target.removeEventListener("touchend", onEnd);
+        target.removeEventListener("touchcancel", onCancel);
+      }
     };
   }, [goToIndex, slides.length]);
 
