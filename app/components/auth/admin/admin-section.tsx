@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { actionClass } from "@/app/components/auth/action-class";
 import UsersList, { type AdminUser, type Role } from "@/app/components/auth/admin/users-list";
 import ApiKeys, { type ApiKeySummary } from "@/app/components/auth/admin/api-keys";
 import { authClient } from "@/app/lib/auth-client";
@@ -112,6 +114,7 @@ export default function AdminSection({ currentUserId }: { currentUserId: string 
 
   return (
     <>
+      <Link href="/admin" className={`${actionClass} self-start`}>[open admin page]</Link>
       <ApiKeys keys={apiKeys.keys} loadError={apiKeys.loadError} onCreate={apiKeys.createKey} onRevoke={apiKeys.revokeKey} />
       <UsersList users={users.users} loadError={users.loadError} currentUserId={currentUserId} onSetRole={users.setRole} />
     </>

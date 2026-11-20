@@ -6,9 +6,8 @@ import AuthDialog from "@/app/components/auth/auth-dialog";
 import { shouldIgnoreShortcut } from "@/app/lib/shortcuts";
 import { SLIDE_DURATION_MS, SLIDE_EASING } from "@/app/lib/motion";
 
-const labels = ["home", "projects", "resume", "hobbies"];
-
 interface NavProps {
+  labels: string[];
   index: number;
   dragPosition: number | null;
   onNavigate: (i: number) => void;
@@ -24,7 +23,7 @@ export function getNavPagePixels(nav: HTMLElement): number {
   return (nav.clientWidth - (current?.offsetWidth ?? 0)) / 2;
 }
 
-export default function Nav({ index, dragPosition, onNavigate, swipeRef }: NavProps) {
+export default function Nav({ labels, index, dragPosition, onNavigate, swipeRef }: NavProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (shouldIgnoreShortcut(e)) return;
@@ -33,11 +32,12 @@ export default function Nav({ index, dragPosition, onNavigate, swipeRef }: NavPr
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onNavigate]);
+  }, [labels.length, onNavigate]);
 
   return (
     <Panel name="nav" heading={false} className="flex items-center gap-0 z-10 order-last sm:order-none">
       <MobileNav
+        labels={labels}
         position={dragPosition ?? index}
         isDragging={dragPosition !== null}
         onNavigate={onNavigate}
@@ -65,13 +65,14 @@ export default function Nav({ index, dragPosition, onNavigate, swipeRef }: NavPr
 }
 
 interface MobileNavProps {
+  labels: string[];
   position: number;
   isDragging: boolean;
   onNavigate: (i: number) => void;
   swipeRef: React.Ref<HTMLElement>;
 }
 
-function MobileNav({ position, isDragging, onNavigate, swipeRef }: MobileNavProps) {
+function MobileNav({ labels, position, isDragging, onNavigate, swipeRef }: MobileNavProps) {
   return (
     <nav ref={swipeRef} aria-label="Sections" className="relative h-9 w-full overflow-hidden touch-pan-y sm:hidden">
       {labels.map((label, i) => (

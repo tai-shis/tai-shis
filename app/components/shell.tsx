@@ -4,7 +4,13 @@ import { useMemo, useRef, useState } from "react";
 import Nav, { getNavPagePixels } from "@/app/components/nav";
 import PageCarousel, { type SwipeSurface } from "@/app/components/page-carousel";
 
-export default function Shell({ children }: { children: React.ReactNode }) {
+export type ShellProps = {
+  /** One nav label per child slide, in the same order. */
+  labels: string[];
+  children: React.ReactNode;
+};
+
+export default function Shell({ labels, children }: ShellProps) {
   const [index, setIndex] = useState(0);
   const [dragPosition, setDragPosition] = useState<number | null>(null);
   const navRef = useRef<HTMLElement>(null);
@@ -18,7 +24,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col gap-4 flex-1 min-h-0">
-      <Nav index={index} dragPosition={dragPosition} onNavigate={setIndex} swipeRef={navRef} />
+      <Nav labels={labels} index={index} dragPosition={dragPosition} onNavigate={setIndex} swipeRef={navRef} />
       <PageCarousel
         index={index}
         onNavigate={setIndex}
