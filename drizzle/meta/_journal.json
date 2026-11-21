@@ -36,6 +36,13 @@
       "when": 1795153044366,
       "tag": "0004_education_gpa",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795238569668,
+      "tag": "0005_chat",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/app/lib/db";
 import {
   education,
@@ -13,6 +13,7 @@ import {
   PROFILE_TABLE_KEYS,
   profileTables,
   type ProfileField,
+  type ProfileFormValues,
   type ProfileRow,
   type ProfileTableKey,
 } from "@/app/lib/profile/tables";
@@ -56,6 +57,41 @@ export async function listProfileRows(table: ProfileTableKey): Promise<ProfileRo
 export async function listAllProfileRows(): Promise<Record<ProfileTableKey, ProfileRow[]>> {
   const rowLists = await Promise.all(PROFILE_TABLE_KEYS.map(listProfileRows));
   return Object.fromEntries(PROFILE_TABLE_KEYS.map((table, i) => [table, rowLists[i]])) as Record<ProfileTableKey, ProfileRow[]>;
+}
+
+/** Oldest first, so the order (and the cached chat prompt built from it) only changes when rows do. */
+export async function listVisibleProfileValues(table: ProfileTableKey): Promise<ProfileFormValues[]> {
+  const dbTable = getDbTable(table);
+  const rows = await db.select().from(dbTable).where(eq(dbTable.visible, true)).orderBy(asc(dbTable.createdAt));
+  return rows.map((row) => toProfileRow(row, profileTables[table].fields).values);
+}
+
+export type ProfileNoteMatch = { source: "qa" | "facts"; text: string };
+
+/**
+ * Full-text search over visible grilling answers and facts. Any query word can match, and
+ * results come back best match first.
+ */
+export async function searchVisibleProfileNotes(query: string, limit: number): Promise<ProfileNoteMatch[]> {
+  // plainto_tsquery ignores search operators and joins words with AND, which misses notes that use
+  // only some of them, so the ANDs become ORs.
+  const { rows } = await db.execute<ProfileNoteMatch & { rank: number }>(sql`
+    with q as (select replace(plainto_tsquery('english', ${query})::text, ' & ', ' | ')::tsquery as query)
+    select source, text, rank from (
+      select 'qa' as source, question || E'\n' || answer as text,
+        ts_rank(to_tsvector('english', coalesce(topic, '') || ' ' || question || ' ' || answer), q.query) as rank
+      from qa, q
+      where visible and to_tsvector('english', coalesce(topic, '') || ' ' || question || ' ' || answer) @@ q.query
+      union all
+      select 'facts' as source, content as text,
+        ts_rank(to_tsvector('english', coalesce(topic, '') || ' ' || content), q.query) as rank
+      from facts, q
+      where visible and to_tsvector('english', coalesce(topic, '') || ' ' || content) @@ q.query
+    ) matches
+    order by rank desc
+    limit ${limit}
+  `);
+  return rows.map(({ source, text }) => ({ source, text }));
 }
 
 export async function insertProfileRow(table: ProfileTableKey, values: ProfileColumnValues): Promise<void> {

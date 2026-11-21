@@ -11,6 +11,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@ai-sdk/react": "4.0.181",
     "@better-auth/api-key": "1.7.25",
     "@neondatabase/serverless": "1.2.1",
     "@openrouter/ai-sdk-provider": "3.1.0",

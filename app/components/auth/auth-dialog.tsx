@@ -2,12 +2,7 @@
 
 import AuthDialogView, { type Account } from "@/app/components/auth/auth-dialog-view";
 import AdminSection from "@/app/components/auth/admin/admin-section";
-import { authClient } from "@/app/lib/auth-client";
-
-async function signInWithGithub(): Promise<boolean> {
-  const { error } = await authClient.signIn.social({ provider: "github", callbackURL: "/" });
-  return !error;
-}
+import { authClient, signInWithGithub } from "@/app/lib/auth-client";
 
 async function signOut(): Promise<boolean> {
   const { error } = await authClient.signOut();
