@@ -55,13 +55,13 @@ export const Editing: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^\[edit/ }));
-    const roleInput = canvas.getByRole("textbox", { name: "role" });
-    await expect(roleInput).toHaveValue("Software Developer Intern");
-    await userEvent.clear(roleInput);
-    await userEvent.type(roleInput, "Developer");
+    const titleInput = canvas.getByRole("textbox", { name: "title" });
+    await expect(titleInput).toHaveValue("Software Developer Intern");
+    await userEvent.clear(titleInput);
+    await userEvent.type(titleInput, "Developer");
     await userEvent.click(canvas.getByRole("button", { name: "[save]" }));
     await expect(args.onUpdate).toHaveBeenCalledWith(expect.objectContaining({ role: "Developer" }));
-    await expect(canvas.queryByRole("textbox", { name: "role" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("textbox", { name: "title" })).not.toBeInTheDocument();
   },
 };
 
@@ -69,7 +69,7 @@ export const ConfirmDelete: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^\[delete/ }));
-    await userEvent.click(canvas.getByRole("button", { name: "[delete role]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[delete position]" }));
     await expect(args.onDelete).toHaveBeenCalled();
   },
 };
@@ -79,7 +79,7 @@ export const DeleteFailed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^\[delete/ }));
-    await userEvent.click(canvas.getByRole("button", { name: "[delete role]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[delete position]" }));
     await expect(await canvas.findByRole("alert")).toHaveTextContent("Unable to save the change. Try again.");
   },
 };

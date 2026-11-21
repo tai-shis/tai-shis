@@ -19,9 +19,11 @@ export type ProfileField<Name extends string = string> = {
   label: string;
   kind: ProfileFieldKind;
   isRequired?: boolean;
+  /** Starts a new row in the two-column form layout instead of filling the next free cell. */
+  startsNewRow?: boolean;
 };
 
-/** Field values as the form edits them: lists hold one item per line, months are `YYYY-MM`, and empty is "". */
+/** Field values as the form edits them: lists hold one item per line, months are `MM-YYYY`, and empty is "". */
 export type ProfileFormValues = Record<string, string>;
 
 export type ProfileRow = {
@@ -52,14 +54,14 @@ type ColumnName<Table extends PgTable> = Extract<keyof Table["$inferInsert"], st
 
 const experienceTable: ProfileTableConfig<ColumnName<typeof experience>> = {
   label: "experience",
-  itemLabel: "role",
+  itemLabel: "position",
   fields: [
-    { name: "role", label: "role", kind: "text", isRequired: true },
+    { name: "role", label: "title", kind: "text", isRequired: true },
     { name: "company", label: "company", kind: "text", isRequired: true },
     { name: "location", label: "location", kind: "text" },
-    { name: "startDate", label: "start", kind: "month" },
-    { name: "endDate", label: "end", kind: "month" },
-    { name: "summary", label: "summary", kind: "multiline" },
+    { name: "startDate", label: "start date", kind: "month", startsNewRow: true },
+    { name: "endDate", label: "end date", kind: "month" },
+    { name: "summary", label: "description", kind: "multiline" },
     { name: "highlights", label: "highlights", kind: "list" },
   ],
   describeRow: (values) => `${values.role} @ ${values.company}`,
@@ -69,12 +71,13 @@ const educationTable: ProfileTableConfig<ColumnName<typeof education>> = {
   label: "education",
   itemLabel: "education",
   fields: [
-    { name: "credential", label: "credential", kind: "text", isRequired: true },
-    { name: "institution", label: "institution", kind: "text", isRequired: true },
-    { name: "field", label: "field", kind: "text" },
-    { name: "startDate", label: "start", kind: "month" },
-    { name: "endDate", label: "end", kind: "month" },
-    { name: "summary", label: "summary", kind: "multiline" },
+    { name: "institution", label: "school", kind: "text", isRequired: true },
+    { name: "credential", label: "degree", kind: "text", isRequired: true },
+    { name: "field", label: "field of study", kind: "text" },
+    { name: "startDate", label: "start date", kind: "month", startsNewRow: true },
+    { name: "endDate", label: "end date", kind: "month" },
+    { name: "gpa", label: "grade", kind: "text", startsNewRow: true },
+    { name: "summary", label: "description", kind: "multiline" },
   ],
   describeRow: (values) => `${values.credential}, ${values.institution}`,
 };
@@ -83,14 +86,14 @@ const projectsTable: ProfileTableConfig<ColumnName<typeof projects>> = {
   label: "projects",
   itemLabel: "project",
   fields: [
-    { name: "name", label: "name", kind: "text", isRequired: true },
+    { name: "name", label: "project name", kind: "text", isRequired: true },
     { name: "summary", label: "summary", kind: "text", isRequired: true },
+    { name: "startDate", label: "start date", kind: "month", startsNewRow: true },
+    { name: "endDate", label: "end date", kind: "month" },
     { name: "description", label: "description", kind: "multiline" },
-    { name: "tech", label: "tech", kind: "list" },
-    { name: "url", label: "url", kind: "url" },
-    { name: "repoUrl", label: "repo url", kind: "url" },
-    { name: "startDate", label: "start", kind: "month" },
-    { name: "endDate", label: "end", kind: "month" },
+    { name: "tech", label: "tech stack", kind: "list" },
+    { name: "url", label: "project url", kind: "url" },
+    { name: "repoUrl", label: "repository url", kind: "url" },
   ],
   describeRow: (values) => values.name,
 };

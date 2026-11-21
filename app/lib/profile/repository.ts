@@ -26,10 +26,16 @@ function getDbTable(table: ProfileTableKey) {
   return profileDbTables[table] as typeof facts;
 }
 
+/** `2025-05-01` (a Postgres date) becomes `05-2025`. */
+function toMonthYear(isoDate: string): string {
+  const [year, month] = isoDate.split("-");
+  return `${month}-${year}`;
+}
+
 function toFormValue(field: ProfileField, value: unknown): string {
   if (value === null || value === undefined) return "";
   if (field.kind === "list") return (value as string[]).join("\n");
-  if (field.kind === "month") return String(value).slice(0, "YYYY-MM".length);
+  if (field.kind === "month") return toMonthYear(String(value));
   return String(value);
 }
 

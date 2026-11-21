@@ -1,0 +1,1 @@
+ALTER TABLE "education" ADD COLUMN "gpa" text;

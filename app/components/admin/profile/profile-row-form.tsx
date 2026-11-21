@@ -19,6 +19,11 @@ function isWideField(field: ProfileField): boolean {
   return field.kind === "multiline" || field.kind === "list";
 }
 
+function getFieldPlacementClass(field: ProfileField): string {
+  if (isWideField(field)) return "sm:col-span-2";
+  return field.startsNewRow ? "sm:col-start-1" : "";
+}
+
 export default function ProfileRowForm({ fields, initialValues, submitLabel, onSubmit, onCancel }: ProfileRowFormProps) {
   const idPrefix = useId();
   const formRef = useRef<HTMLFormElement>(null);
@@ -96,9 +101,13 @@ type FormFieldProps = {
 
 function getFieldHint(field: ProfileField): string | null {
   if (field.kind === "list") return "One per line.";
-  if (field.kind === "month") return "Format: YYYY-MM.";
   return null;
 }
+
+const PLACEHOLDER_BY_KIND: Partial<Record<ProfileField["kind"], string>> = {
+  url: "https://",
+  month: "MM-YYYY",
+};
 
 function FormField({ id, field, value, error, onChange }: FormFieldProps) {
   const hint = getFieldHint(field);
@@ -116,7 +125,7 @@ function FormField({ id, field, value, error, onChange }: FormFieldProps) {
   };
 
   return (
-    <div className={`flex flex-col gap-1 ${isWideField(field) ? "sm:col-span-2" : ""}`}>
+    <div className={`flex flex-col gap-1 ${getFieldPlacementClass(field)}`}>
       <label htmlFor={id} className="text-sm text-muted">
         {field.label}
         {field.isRequired && <span aria-hidden="true"> *</span>}
@@ -131,9 +140,10 @@ function FormField({ id, field, value, error, onChange }: FormFieldProps) {
       ) : (
         <input
           {...controlProps}
-          type={field.kind === "text" ? "text" : field.kind}
+          type={field.kind === "url" ? "url" : "text"}
+          inputMode={field.kind === "month" ? "numeric" : undefined}
           spellCheck={field.kind === "url" ? false : undefined}
-          placeholder={field.kind === "url" ? "https://" : undefined}
+          placeholder={PLACEHOLDER_BY_KIND[field.kind]}
           onChange={(e) => onChange(e.target.value)}
           className={inputClass}
         />

@@ -12,7 +12,7 @@ const meta = {
   args: {
     fields: experienceFields,
     initialValues: getEmptyFormValues(experienceFields),
-    submitLabel: "add role",
+    submitLabel: "add position",
     onSubmit: fn(async (): Promise<ProfileMutationResult> => ({ ok: true })),
     onCancel: fn(),
   },
@@ -27,6 +27,22 @@ export const Filled: Story = {
   args: { initialValues: experienceRows[0].values, submitLabel: "save" },
 };
 
+export const Education: Story = {
+  args: {
+    fields: profileTables.education.fields,
+    initialValues: {
+      institution: "Mount Royal University",
+      credential: "Bachelor of Computer Information Systems",
+      field: "Computer Science",
+      startDate: "09-2022",
+      endDate: "",
+      gpa: "3.8/4.0",
+      summary: "",
+    },
+    submitLabel: "save",
+  },
+};
+
 export const QuestionAndAnswer: Story = {
   args: {
     fields: profileTables.qa.fields,
@@ -38,9 +54,9 @@ export const QuestionAndAnswer: Story = {
 export const Submits: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByRole("textbox", { name: "role" }), "Developer");
+    await userEvent.type(canvas.getByRole("textbox", { name: "title" }), "Developer");
     await userEvent.type(canvas.getByRole("textbox", { name: "company" }), "Acme");
-    await userEvent.click(canvas.getByRole("button", { name: "[add role]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[add position]" }));
     await expect(args.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ role: "Developer", company: "Acme" }));
   },
 };
@@ -48,7 +64,7 @@ export const Submits: Story = {
 export const SubmitsWithCtrlEnter: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByRole("textbox", { name: "summary" }), "Shipped things{Control>}{Enter}{/Control}");
+    await userEvent.type(canvas.getByRole("textbox", { name: "description" }), "Shipped things{Control>}{Enter}{/Control}");
     await expect(args.onSubmit).toHaveBeenCalledWith(expect.objectContaining({ summary: "Shipped things" }));
   },
 };
@@ -58,17 +74,17 @@ export const FieldErrors: Story = {
     onSubmit: fn(async (): Promise<ProfileMutationResult> => ({
       ok: false,
       error: "Fix the highlighted fields.",
-      fieldErrors: { role: "Enter a role.", startDate: "Use the format YYYY-MM." },
+      fieldErrors: { role: "Enter a title.", startDate: "Use the format MM-YYYY, like 05-2025." },
     })),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "[add role]" }));
-    const roleInput = canvas.getByRole("textbox", { name: "role" });
-    await expect(roleInput).toHaveAttribute("aria-invalid", "true");
-    await expect(roleInput).toHaveAccessibleDescription("Enter a role.");
-    await expect(roleInput).toHaveFocus();
-    await expect(canvas.getByLabelText(/^start/)).toHaveAccessibleDescription("Format: YYYY-MM. Use the format YYYY-MM.");
+    await userEvent.click(canvas.getByRole("button", { name: "[add position]" }));
+    const titleInput = canvas.getByRole("textbox", { name: "title" });
+    await expect(titleInput).toHaveAttribute("aria-invalid", "true");
+    await expect(titleInput).toHaveAccessibleDescription("Enter a title.");
+    await expect(titleInput).toHaveFocus();
+    await expect(canvas.getByLabelText(/^start/)).toHaveAccessibleDescription("Use the format MM-YYYY, like 05-2025.");
     await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
   },
 };
@@ -77,7 +93,7 @@ export const SaveFailed: Story = {
   args: { onSubmit: fn(async () => SAVE_FAILED) },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "[add role]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[add position]" }));
     await expect(await canvas.findByRole("alert")).toHaveTextContent("Unable to save the change. Try again.");
   },
 };

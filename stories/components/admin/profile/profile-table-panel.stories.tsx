@@ -26,12 +26,12 @@ export const Adding: Story = {
   args: { actions: createProfileRowActions() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "[add role]" }));
-    await userEvent.type(canvas.getByRole("textbox", { name: "role" }), "Developer");
+    await userEvent.click(canvas.getByRole("button", { name: "[add position]" }));
+    await userEvent.type(canvas.getByRole("textbox", { name: "title" }), "Developer");
     await userEvent.type(canvas.getByRole("textbox", { name: "company" }), "Acme");
-    await userEvent.click(canvas.getByRole("button", { name: "[add role]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[add position]" }));
     await expect(args.actions.create).toHaveBeenCalledWith("experience", expect.objectContaining({ role: "Developer" }));
-    await expect(canvas.queryByRole("textbox", { name: "role" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("textbox", { name: "title" })).not.toBeInTheDocument();
   },
 };
 

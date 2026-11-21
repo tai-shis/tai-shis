@@ -43,6 +43,7 @@ export const education = pgTable("education", {
   credential: text("credential").notNull(),
   field: text("field"),
   ...dateRangeColumns,
+  gpa: text("gpa"),
   summary: text("summary"),
 });
 

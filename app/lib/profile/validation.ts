@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { profileTables, type ProfileField, type ProfileTableKey } from "@/app/lib/profile/tables";
 
-const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
+// MM-YYYY, also accepting a one-digit month and a slash separator.
+const MONTH_PATTERN = /^(0?[1-9]|1[0-2])[-/](\d{4})$/;
 
 export type ProfileColumnValue = string | string[] | null;
 export type ProfileColumnValues = Record<string, ProfileColumnValue>;
@@ -23,6 +24,13 @@ function isHttpUrl(value: string): boolean {
   }
 }
 
+function toFirstOfMonth(value: string): string | null {
+  const match = MONTH_PATTERN.exec(value);
+  if (!match) return null;
+  const [, month, year] = match;
+  return `${year}-${month.padStart(2, "0")}-01`;
+}
+
 function splitLines(value: string): string[] {
   return value
     .split("\n")
@@ -41,8 +49,8 @@ function buildFieldSchema(field: ProfileField) {
       return z.string().transform(splitLines);
     case "month":
       return buildTextSchema(field)
-        .refine((value) => value === "" || MONTH_PATTERN.test(value), "Use the format YYYY-MM.")
-        .transform((value) => (value === "" ? null : `${value}-01`));
+        .refine((value) => value === "" || MONTH_PATTERN.test(value), "Use the format MM-YYYY, like 05-2025.")
+        .transform(toFirstOfMonth);
     case "url":
       return buildTextSchema(field)
         .refine((value) => value === "" || isHttpUrl(value), "Enter a full URL, starting with https://.")
