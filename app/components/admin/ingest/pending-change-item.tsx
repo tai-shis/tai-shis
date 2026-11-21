@@ -57,7 +57,8 @@ export default function PendingChangeItem({ change, onApprove, onReject }: Pendi
   };
 
   return (
-    <li className="flex flex-col gap-2 border-t border-border pt-2 first:border-t-0 first:pt-0">
+    // rounded-none! overrides the global 8px radius, which bends the ends of a top-only border.
+    <li className="flex flex-col gap-2 border-t border-border rounded-none! pt-2 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-center gap-x-2 px-2">
         <span className="min-w-0 break-words">
           <span className="text-accent">{heading}</span>: {title}

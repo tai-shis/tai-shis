@@ -1,5 +1,5 @@
 import type { UIMessage } from "ai";
-import type { ProfileFormValues, ProfileTableKey } from "@/app/lib/profile/tables";
+import type { ProfileFormValues, ProfileMutationResult, ProfileTableKey } from "@/app/lib/profile/tables";
 
 /** Sonnet spend across all ingestion sessions per UTC day, in US dollars. */
 export const INGESTION_DAILY_SPEND_CAP_USD = 1;
@@ -20,6 +20,8 @@ export type IngestionUIMessage = UIMessage<unknown, IngestionDataTypes>;
 
 export type PendingChangeAction = "create" | "update" | "delete";
 
+export type PendingChangeStatus = "pending" | "approved" | "rejected";
+
 /**
  * A proposal waiting for review. `values` are the proposed form values (empty for a delete), and
  * `current` is the row as it is now (null for a create, or when the row has since been deleted).
@@ -31,9 +33,18 @@ export type PendingChange = {
   values: ProfileFormValues;
   current: ProfileFormValues | null;
   reason: string | null;
+  status: PendingChangeStatus;
 };
 
-export type IngestionSessionSummary = { id: string; title: string; createdAt: string };
+export type PendingChangeActions = {
+  approve: (id: string, values?: ProfileFormValues) => Promise<ProfileMutationResult>;
+  approveAll: (ids: string[]) => Promise<ProfileMutationResult>;
+  reject: (id: string) => Promise<ProfileMutationResult>;
+  rejectAll: (ids: string[]) => Promise<ProfileMutationResult>;
+};
+
+/** `toReview` counts the session's proposals still waiting for approve or reject. */
+export type IngestionSessionSummary = { id: string; title: string; createdAt: string; toReview: number };
 
 /** What the propose tools return to the model. */
 export type ProposalResult = { ok: true; pendingChangeId: string } | { ok: false; error: string };

@@ -21,6 +21,7 @@ const createChange: PendingChange = {
   values: position,
   current: null,
   reason: 'Tai said: "I was a developer intern at Acme."',
+  status: "pending",
 };
 
 const updateChange: PendingChange = {
@@ -30,6 +31,7 @@ const updateChange: PendingChange = {
   values: { ...position, endDate: "09-2025", location: "" },
   current: position,
   reason: "The internship ended in September.",
+  status: "pending",
 };
 
 const deleteChange: PendingChange = {
@@ -39,6 +41,7 @@ const deleteChange: PendingChange = {
   values: {},
   current: { name: "Climbing", description: "Most weekends." },
   reason: "Duplicate of Bouldering.",
+  status: "pending",
 };
 
 const orphanedUpdate: PendingChange = { ...updateChange, id: "00000000-0000-4000-8000-0000000000c4", current: null };
@@ -50,7 +53,7 @@ const meta = {
   component: PendingChangeList,
   args: {
     changes: [createChange, updateChange, deleteChange],
-    actions: { approve: fn(succeed), reject: fn(succeed) },
+    actions: { approve: fn(succeed), approveAll: fn(succeed), reject: fn(succeed), rejectAll: fn(succeed) },
   },
 } satisfies Meta<typeof PendingChangeList>;
 
@@ -60,7 +63,58 @@ type Story = StoryObj<typeof meta>;
 export const Empty: Story = {
   args: { changes: [] },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText(/Nothing waiting for review/)).toBeInTheDocument();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/Nothing waiting for review/)).toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: "[reject all]" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: "[approve all]" })).not.toBeInTheDocument();
+  },
+};
+
+export const RejectsAll: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "[reject all]" }));
+    // A second click confirms, so one slip can't throw away every proposal.
+    await expect(args.actions.rejectAll).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: "[reject all 3?]" }));
+    await expect(args.actions.rejectAll).toHaveBeenCalledWith([createChange.id, updateChange.id, deleteChange.id]);
+  },
+};
+
+export const ApprovesAll: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "[approve all]" }));
+    await expect(args.actions.approveAll).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: "[approve all 3?]" }));
+    await expect(args.actions.approveAll).toHaveBeenCalledWith([createChange.id, updateChange.id, deleteChange.id]);
+  },
+};
+
+export const ApproveAllPartlyFailed: Story = {
+  args: {
+    actions: {
+      approve: fn(succeed),
+      approveAll: fn(async () => ({ ok: false as const, error: "Approved 2 of 3. The one left couldn't be saved." })),
+      reject: fn(succeed),
+      rejectAll: fn(succeed),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "[approve all]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[approve all 3?]" }));
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("Approved 2 of 3.");
+  },
+};
+
+export const CancelsRejectAll: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "[reject all]" }));
+    await userEvent.click(canvas.getByRole("button", { name: "[cancel]" }));
+    await expect(canvas.getByRole("button", { name: "[reject all]" })).toBeInTheDocument();
+    await expect(args.actions.rejectAll).not.toHaveBeenCalled();
   },
 };
 
@@ -109,7 +163,12 @@ export const Rejects: Story = {
 export const ApproveFailed: Story = {
   args: {
     changes: [createChange],
-    actions: { approve: fn(async () => ({ ok: false as const, error: "This proposal was already handled. Reload the page." })), reject: fn(succeed) },
+    actions: {
+      approve: fn(async () => ({ ok: false as const, error: "This proposal was already handled. Reload the page." })),
+      approveAll: fn(succeed),
+      reject: fn(succeed),
+      rejectAll: fn(succeed),
+    },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -52,6 +52,11 @@ function getOutputError(output: unknown): string | null {
   return "error" in output && typeof output.error === "string" ? output.error : "Unknown error.";
 }
 
+function getPendingChangeId(output: unknown): string | undefined {
+  if (typeof output !== "object" || output === null || !("pendingChangeId" in output)) return undefined;
+  return typeof output.pendingChangeId === "string" ? output.pendingChangeId : undefined;
+}
+
 function toStep(part: ToolPart): IngestionStep {
   const toolName = part.type.slice("tool-".length);
   const input = (typeof part.input === "object" && part.input !== null ? part.input : {}) as ToolInput;
@@ -64,7 +69,7 @@ function toStep(part: ToolPart): IngestionStep {
   }
   const error = getOutputError(part.output);
   if (error) return { id: part.toolCallId, label: `${describeStep(toolName, input, false)} failed`, state: "failed", detail: error };
-  return { id: part.toolCallId, label: describeStep(toolName, input, true), state: "done" };
+  return { id: part.toolCallId, label: describeStep(toolName, input, true), state: "done", pendingChangeId: getPendingChangeId(part.output) };
 }
 
 export function toIngestionEntry(message: IngestionUIMessage): IngestionEntry {

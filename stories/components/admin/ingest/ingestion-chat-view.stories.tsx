@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import IngestionChatView, { type IngestionEntry } from "@/app/components/admin/ingest/ingestion-chat-view";
 import { toIngestionEntry } from "@/app/components/admin/ingest/to-ingestion-entry";
-import type { IngestionUIMessage, PdfAttachment } from "@/app/lib/ingestion/types";
+import type { IngestionUIMessage, PdfAttachment, PendingChange } from "@/app/lib/ingestion/types";
 
 const resumePdf: PdfAttachment = {
   filename: "resume.pdf",
@@ -53,6 +53,24 @@ const uiMessages: IngestionUIMessage[] = [
 
 const messages: IngestionEntry[] = uiMessages.map(toIngestionEntry);
 
+const internship: PendingChange = {
+  id: "p1",
+  table: "experience",
+  action: "create",
+  values: {
+    role: "Developer Intern",
+    company: "Acme",
+    location: "",
+    startDate: "05-2025",
+    endDate: "08-2025",
+    summary: "",
+    highlights: "",
+  },
+  current: null,
+  reason: 'Tai said: "I was a developer intern at Acme."',
+  status: "pending",
+};
+
 const meta = {
   title: "Sections/Admin/Ingest/IngestionChatView",
   component: IngestionChatView,
@@ -68,6 +86,8 @@ const meta = {
     status: "ready",
     error: null,
     canRetry: false,
+    changes: [],
+    isLoadingChanges: false,
     upload: { status: "none" },
     onAttach: fn(),
     onRemoveAttachment: fn(),
@@ -85,6 +105,7 @@ export const Empty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText(/Paste a resume section/)).toBeInTheDocument();
+    await expect(canvas.getByRole("textbox", { name: "Message" })).toBeEnabled();
     await expect(canvas.queryByRole("button", { name: "[new session]" })).not.toBeInTheDocument();
   },
 };
@@ -95,10 +116,44 @@ export const WithSteps: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText("[pdf] resume.pdf · 2 pages")).toBeInTheDocument();
     await expect(canvas.getByText("read experience")).toBeInTheDocument();
+    // Before the proposals load, a proposal shows as a plain step.
     await expect(canvas.getByText("proposed add position: Developer Intern @ Acme")).toBeInTheDocument();
     await expect(canvas.getByText("proposing add hobby: Climbing failed")).toBeInTheDocument();
     await expect(canvas.getByText(": description: Enter a description.")).toBeInTheDocument();
     await expect(canvas.getByText("proposing edit education (grade)")).toBeInTheDocument();
+    // The reply is over, so a step still in progress was cut off.
+    await expect(canvas.getByText(": didn't finish")).toBeInTheDocument();
+  },
+};
+
+export const WaitingForReview: Story = {
+  args: { messages, changes: [internship] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("waiting for review", { exact: false })).toBeInTheDocument();
+    // The cards live in the pending panel, so the chat only points at them and waits.
+    await expect(canvas.queryByRole("button", { name: /^\[approve/ })).not.toBeInTheDocument();
+    await expect(canvas.getByRole("status")).toHaveTextContent("Review the proposal below to continue.");
+    await expect(canvas.getByRole("textbox", { name: "Message" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "[send]" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "[attach pdf]" })).toBeDisabled();
+  },
+};
+
+export const ReviewedProposal: Story = {
+  args: { messages, changes: [{ ...internship, status: "approved" }] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("· approved")).toBeInTheDocument();
+    await expect(canvas.queryByRole("status")).not.toBeInTheDocument();
+    await expect(canvas.getByRole("textbox", { name: "Message" })).toBeEnabled();
+  },
+};
+
+export const LoadingProposals: Story = {
+  args: { messages, isLoadingChanges: true },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole("textbox", { name: "Message" })).toBeDisabled();
   },
 };
 
@@ -108,6 +163,7 @@ export const Waiting: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("log")).toHaveAttribute("aria-busy", "true");
     await expect(canvas.getByText("ai › ...")).toBeInTheDocument();
+    await expect(canvas.getByRole("textbox", { name: "Message" })).toBeDisabled();
     await expect(canvas.getByRole("button", { name: "[new session]" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: "[stop]" }));
     await expect(args.onStop).toHaveBeenCalled();

@@ -28,26 +28,56 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Visible: Story = {};
+export const Public: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Every filled field shows without opening the form.
+    await expect(canvas.getByText("Calgary, AB")).toBeInTheDocument();
+    await expect(canvas.getByText("Built reporting pipelines for vendor data.")).toBeInTheDocument();
+    await expect(canvas.getByText("Cut report generation time in half")).toBeInTheDocument();
+    await expect(canvas.getByText("Migrated cron jobs to queues")).toBeInTheDocument();
+    await expect(canvas.queryByRole("textbox")).not.toBeInTheDocument();
+  },
+};
 
-export const Hidden: Story = { args: { row: experienceRows[1] } };
+export const Private: Story = {
+  args: { row: experienceRows[1] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("(private)")).toBeInTheDocument();
+    // Empty fields are left out.
+    await expect(canvas.queryByText("location")).not.toBeInTheDocument();
+  },
+};
 
 export const LongTitle: Story = { args: { row: longTitleRow } };
 
-export const Hides: Story = {
+export const MakesPrivate: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^\[hide/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /^\[private/ }));
     await expect(args.onSetVisibility).toHaveBeenCalledWith(false);
   },
 };
 
-export const Shows: Story = {
+export const MakesPublic: Story = {
   args: { row: experienceRows[1] },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^\[show/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /^\[public/ }));
     await expect(args.onSetVisibility).toHaveBeenCalledWith(true);
+  },
+};
+
+export const Collapses: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /^\[hide/ }));
+    await expect(canvas.queryByText("Calgary, AB")).not.toBeInTheDocument();
+    // Hiding only folds the details away here: the row stays public.
+    await expect(args.onSetVisibility).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: /^\[show/ }));
+    await expect(canvas.getByText("Calgary, AB")).toBeInTheDocument();
   },
 };
 

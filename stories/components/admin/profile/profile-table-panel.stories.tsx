@@ -39,7 +39,7 @@ export const RowActionsTargetTheRow: Story = {
   args: { actions: createProfileRowActions() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getAllByRole("button", { name: /^\[hide/ })[0]);
+    await userEvent.click(canvas.getAllByRole("button", { name: /^\[private/ })[0]);
     await expect(args.actions.setVisibility).toHaveBeenCalledWith("experience", experienceRows[0].id, false);
   },
 };

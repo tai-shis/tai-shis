@@ -8,21 +8,24 @@ import Panel from "@/app/components/panel";
 import { actionClass } from "@/app/components/auth/action-class";
 import RowActionLabel from "@/app/components/admin/row-action-label";
 import IngestionChatView, { type PdfUploadState } from "@/app/components/admin/ingest/ingestion-chat-view";
+import PendingChangeList from "@/app/components/admin/ingest/pending-change-list";
 import { toIngestionEntry } from "@/app/components/admin/ingest/to-ingestion-entry";
+import type { LoadChangesResult, LoadSessionResult } from "@/app/lib/ingestion/actions";
 import {
   MAX_PDF_BYTES,
   type IngestionSessionSummary,
   type IngestionUIMessage,
   type PdfAttachment,
+  type PendingChange,
+  type PendingChangeActions,
 } from "@/app/lib/ingestion/types";
+import type { ProfileFormValues, ProfileMutationResult } from "@/app/lib/profile/tables";
 
-type LoadSessionResult = { ok: true; messages: IngestionUIMessage[] } | { ok: false; error: string };
-
-/** `children` renders between the chat and the session list. */
 export type IngestionWorkspaceProps = {
   sessions: IngestionSessionSummary[];
   loadSession: (id: string) => Promise<LoadSessionResult>;
-  children?: React.ReactNode;
+  loadChanges: (sessionId: string) => Promise<LoadChangesResult>;
+  actions: PendingChangeActions;
 };
 
 const transport = new DefaultChatTransport<IngestionUIMessage>({ api: "/api/admin/ingest" });
@@ -59,10 +62,12 @@ async function readPdf(file: File): Promise<{ ok: true; pdf: PdfAttachment } | {
   }
 }
 
-type OpenSession = { id: string; initialMessages: IngestionUIMessage[] };
+type OpenSession = { id: string; initialMessages: IngestionUIMessage[]; initialChanges: PendingChange[] };
 
-export default function IngestionWorkspace({ sessions, loadSession, children }: IngestionWorkspaceProps) {
-  const [openSession, setOpenSession] = useState<OpenSession>(() => ({ id: crypto.randomUUID(), initialMessages: [] }));
+const newSession = (): OpenSession => ({ id: crypto.randomUUID(), initialMessages: [], initialChanges: [] });
+
+export default function IngestionWorkspace({ sessions, loadSession, loadChanges, actions }: IngestionWorkspaceProps) {
+  const [openSession, setOpenSession] = useState<OpenSession>(newSession);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -71,7 +76,7 @@ export default function IngestionWorkspace({ sessions, loadSession, children }: 
     setLoadingId(id);
     const result = await loadSession(id);
     setLoadingId(null);
-    if (result.ok) setOpenSession({ id, initialMessages: result.messages });
+    if (result.ok) setOpenSession({ id, initialMessages: result.messages, initialChanges: result.changes });
     else setLoadError(result.error);
   };
 
@@ -79,11 +84,11 @@ export default function IngestionWorkspace({ sessions, loadSession, children }: 
     <div className="w-full flex flex-col gap-4">
       <IngestionChat
         key={openSession.id}
-        sessionId={openSession.id}
-        initialMessages={openSession.initialMessages}
-        onNewSession={() => setOpenSession({ id: crypto.randomUUID(), initialMessages: [] })}
+        session={openSession}
+        loadChanges={loadChanges}
+        actions={actions}
+        onNewSession={() => setOpenSession(newSession())}
       />
-      {children}
       <Panel name="sessions" className="p-4 flex flex-col gap-2">
         {sessions.length === 0 ? (
           <p className="px-2 text-sm text-muted">Past sessions show up here.</p>
@@ -93,6 +98,7 @@ export default function IngestionWorkspace({ sessions, loadSession, children }: 
               <li key={session.id} className="flex items-center gap-2 px-2">
                 <span className="min-w-0 truncate">{session.title}</span>
                 <span className="shrink-0 text-xs text-muted">{session.createdAt.slice(0, 10)}</span>
+                {session.toReview > 0 && <span className="shrink-0 text-xs text-accent">({session.toReview} to review)</span>}
                 <span className="ml-auto shrink-0">
                   {session.id === openSession.id ? (
                     <span className="px-2 text-xs text-muted">(open)</span>
@@ -113,21 +119,66 @@ export default function IngestionWorkspace({ sessions, loadSession, children }: 
 }
 
 type IngestionChatProps = {
-  sessionId: string;
-  initialMessages: IngestionUIMessage[];
+  session: OpenSession;
+  loadChanges: (sessionId: string) => Promise<LoadChangesResult>;
+  actions: PendingChangeActions;
   onNewSession: () => void;
 };
 
-function IngestionChat({ sessionId, initialMessages, onNewSession }: IngestionChatProps) {
+function IngestionChat({ session, loadChanges, actions, onNewSession }: IngestionChatProps) {
   const router = useRouter();
+  const [changes, setChanges] = useState<PendingChange[]>(session.initialChanges);
+  const [isLoadingChanges, setIsLoadingChanges] = useState(false);
+  const [changesError, setChangesError] = useState<string | null>(null);
+
+  const syncChanges = async () => {
+    setIsLoadingChanges(true);
+    const result = await loadChanges(session.id);
+    setIsLoadingChanges(false);
+    if (result.ok) {
+      setChanges(result.changes);
+      setChangesError(null);
+    } else {
+      setChangesError(result.error);
+    }
+  };
+
   const { messages, sendMessage, status, error, stop, regenerate } = useChat<IngestionUIMessage>({
-    id: sessionId,
-    messages: initialMessages,
+    id: session.id,
+    messages: session.initialMessages,
     transport,
-    // New proposals and the session list come from the server, so reload them after each reply.
-    onFinish: () => router.refresh(),
+    onFinish: async () => {
+      // The reply's proposals are saved on the server, so load them before unlocking the chat.
+      await syncChanges();
+      router.refresh();
+    },
   });
   const errorState = describeError(error);
+
+  const review = async (id: string, status: "approved" | "rejected", run: () => Promise<ProfileMutationResult>) => {
+    const result = await run();
+    if (result.ok) setChanges((current) => current.map((change) => (change.id === id ? { ...change, status } : change)));
+    // Field errors belong to the edit form. Anything else may mean it was reviewed elsewhere, so reload.
+    else if (!result.fieldErrors) await syncChanges();
+    return result;
+  };
+
+  const reviewActions: PendingChangeActions = {
+    approve: (id: string, values?: ProfileFormValues) => review(id, "approved", () => actions.approve(id, values)),
+    reject: (id: string) => review(id, "rejected", () => actions.reject(id)),
+    // Bulk results can be partial, so reload either way to show exactly what the server has.
+    approveAll: async (ids: string[]) => {
+      const result = await actions.approveAll(ids);
+      await syncChanges();
+      return result;
+    },
+    rejectAll: async (ids: string[]) => {
+      const result = await actions.rejectAll(ids);
+      await syncChanges();
+      return result;
+    },
+  };
+
   const [upload, setUpload] = useState<PdfUploadState>({ status: "none" });
   // Only the latest pick counts, so removing or replacing a PDF mid-read drops the old result.
   const uploadIdRef = useRef(0);
@@ -156,18 +207,24 @@ function IngestionChat({ sessionId, initialMessages, onNewSession }: IngestionCh
   };
 
   return (
-    <IngestionChatView
-      messages={messages.map(toIngestionEntry)}
-      status={status}
-      error={errorState?.message ?? null}
-      canRetry={errorState?.canRetry ?? false}
-      upload={upload}
-      onAttach={handleAttach}
-      onRemoveAttachment={handleRemove}
-      onSend={handleSend}
-      onStop={stop}
-      onRetry={() => regenerate()}
-      onNewSession={onNewSession}
-    />
+    <>
+      <IngestionChatView
+        messages={messages.map(toIngestionEntry)}
+        status={status}
+        error={errorState?.message ?? changesError}
+        canRetry={errorState?.canRetry ?? false}
+        changes={changes}
+        isLoadingChanges={isLoadingChanges}
+        upload={upload}
+        onAttach={handleAttach}
+        onRemoveAttachment={handleRemove}
+        onSend={handleSend}
+        onStop={stop}
+        onRetry={() => regenerate()}
+        onNewSession={onNewSession}
+      />
+      {/* Only this session's proposals: they're what keep the chat locked. */}
+      <PendingChangeList changes={changes.filter((change) => change.status === "pending")} actions={reviewActions} />
+    </>
   );
 }

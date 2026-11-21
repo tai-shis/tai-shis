@@ -50,7 +50,7 @@ export function createIngestionTools(sessionId: string) {
   return {
     list_profile: tool({
       description:
-        "List every row in a profile table, hidden rows included, plus proposals still waiting for Tai's review. Call this before proposing anything for a table, so you edit existing rows instead of adding duplicates.",
+        "List every row in a profile table, private rows (visible: false, kept from the public chat) included, plus proposals still waiting for Tai's review. Call this before proposing anything for a table, so you edit existing rows instead of adding duplicates.",
       inputSchema: z.object({ table: tableSchema }),
       execute: async ({ table }) => {
         const [rows, pending] = await Promise.all([listProfileRows(table), listPendingChanges()]);

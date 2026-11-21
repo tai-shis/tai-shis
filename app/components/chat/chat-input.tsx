@@ -12,6 +12,8 @@ export type ChatInputProps = {
   allowEmpty?: boolean;
   /** Holds sending back without showing [stop], e.g. while a file is still being read. */
   sendDisabled?: boolean;
+  /** Stops typing too, e.g. until proposals are reviewed. */
+  inputDisabled?: boolean;
   /** Extra controls on the left of the bottom row. */
   accessory?: React.ReactNode;
   onSend: (text: string) => void;
@@ -26,6 +28,7 @@ export default function ChatInput({
   rows = 2,
   allowEmpty = false,
   sendDisabled = false,
+  inputDisabled = false,
   accessory,
   onSend,
   onStop,
@@ -62,12 +65,13 @@ export default function ChatInput({
         id={inputId}
         value={text}
         rows={rows}
+        disabled={inputDisabled}
         maxLength={maxLength}
         placeholder={placeholder}
         aria-describedby={countId}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="w-full min-w-0 resize-none border border-border bg-transparent px-2 py-1 text-sm text-foreground"
+        className="w-full min-w-0 resize-none border border-border bg-transparent px-2 py-1 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
       />
       <div className="flex items-center gap-2">
         {accessory}

@@ -25,9 +25,11 @@ export type FooterProps = {
   sections: string[];
   /** Replaces the copyright line at the start of the footer. */
   start?: React.ReactNode;
+  /** Shown centered in the footer on wider screens. */
+  center?: React.ReactNode;
 };
 
-export default function Footer({ sections, start = <span className="p-2">© 2026 - tai-shis</span> }: FooterProps) {
+export default function Footer({ sections, start = <span className="p-2">© 2026 - tai-shis</span>, center }: FooterProps) {
   const commit = getLastCommit();
   const shortcutHint = sections.map((label, i) => `${i + 1}: ${capitalize(label)}`).join(" | ");
   const shortCommit = commit ? commit.slice(0, 7) : null;
@@ -44,6 +46,7 @@ export default function Footer({ sections, start = <span className="p-2">© 2026
         }
         heading={false} className="flex items-center px-4 py-2 text-sm text-muted relative z-10">
         {start}
+        {center && <div className="absolute left-1/2 -translate-x-1/2 hidden sm:block">{center}</div>}
         <div className="ml-auto sm:hidden">
           <AuthDialog />
         </div>

@@ -17,6 +17,7 @@ import {
   addPdfToSessionSource,
   ensureIngestionSession,
   getIngestionSpendTodayUsd,
+  getSessionChangeStatuses,
   saveIngestionMessage,
 } from "@/app/lib/ingestion/repository";
 import { createIngestionTools } from "@/app/lib/ingestion/tools";
@@ -25,6 +26,7 @@ import {
   MAX_INGESTION_MESSAGE_CHARS,
   type IngestionUIMessage,
   type PdfAttachment,
+  type PendingChangeStatus,
 } from "@/app/lib/ingestion/types";
 
 export const maxDuration = 120;
@@ -32,7 +34,8 @@ export const maxDuration = 120;
 const MAX_BODY_CHARS = 1_000_000;
 const MAX_MESSAGES = 200;
 const MAX_STEPS = 12;
-const MAX_REPLY_TOKENS = 4000;
+// Per step. A whole resume of proposals in one step ran past 4,000 and lost every one.
+const MAX_REPLY_TOKENS = 12_000;
 // streamText reports cost when it ends, which is normally before the reply message is complete.
 const COST_WAIT_MS = 5000;
 
@@ -70,6 +73,22 @@ function getPdfs(message: RequestMessage): PdfAttachment[] {
 /** What names a session: its first text, or the PDF it started with. */
 function getTitleText(message: RequestMessage): string {
   return getText(message) || getPdfs(message)[0]?.filename || "";
+}
+
+/**
+ * Adds Tai's review to each reviewed proposal's result, e.g. reviewedAfterwards: "rejected", in the history the
+ * model sees. Kept next to the proposal it belongs to, so the model can't mix up which was which.
+ */
+function withReviews(messages: IngestionUIMessage[], statuses: Map<string, PendingChangeStatus>): IngestionUIMessage[] {
+  return messages.map((message) => ({
+    ...message,
+    parts: message.parts.map((part) => {
+      if (!part.type.startsWith("tool-propose_") || !("output" in part)) return part;
+      const output = part.output as { pendingChangeId?: unknown } | undefined;
+      const status = typeof output?.pendingChangeId === "string" ? statuses.get(output.pendingChangeId) : undefined;
+      return status && status !== "pending" ? { ...part, output: { ...output, reviewedAfterwards: status } } : part;
+    }),
+  })) as IngestionUIMessage[];
 }
 
 function parseJson(body: string): unknown {
@@ -132,7 +151,7 @@ export async function POST(request: Request) {
   const result = streamText({
     model: ingestionModel,
     instructions: buildIngestionInstructions(),
-    messages: await convertToModelMessages<IngestionUIMessage>(validated.data, {
+    messages: await convertToModelMessages<IngestionUIMessage>(withReviews(validated.data, await getSessionChangeStatuses(sessionId)), {
       tools,
       ignoreIncompleteToolCalls: true,
       convertDataPart: (part) => (part.type === "data-pdf" ? { type: "text", text: describePdfForModel(part.data) } : undefined),

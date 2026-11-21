@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, sql, sum } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql, sum } from "drizzle-orm";
 import { db } from "@/app/lib/db";
 import { ingestionMessages, ingestionSessions, pendingChanges } from "@/app/lib/db/ingestion-schema";
 import { sources } from "@/app/lib/db/profile-schema";
@@ -9,6 +9,7 @@ import type {
   IngestionUIMessage,
   PendingChange,
   PendingChangeAction,
+  PendingChangeStatus,
   PdfAttachment,
 } from "@/app/lib/ingestion/types";
 
@@ -92,7 +93,13 @@ export async function getIngestionSpendTodayUsd(): Promise<number> {
 
 export async function listIngestionSessions(): Promise<IngestionSessionSummary[]> {
   const rows = await db
-    .select({ id: ingestionSessions.id, title: ingestionSessions.title, createdAt: ingestionSessions.createdAt })
+    .select({
+      id: ingestionSessions.id,
+      title: ingestionSessions.title,
+      createdAt: ingestionSessions.createdAt,
+      // Spelled out in full: Drizzle leaves column names unqualified here, and "id" would mean the proposal's id.
+      toReview: sql<number>`(select count(*)::int from pending_changes p where p.session_id = ingestion_sessions.id and p.status = 'pending')`,
+    })
     .from(ingestionSessions)
     .orderBy(desc(ingestionSessions.updatedAt))
     .limit(SESSION_LIST_LIMIT);
@@ -137,12 +144,7 @@ function isProfileTableKey(value: string): value is ProfileTableKey {
 }
 
 /** Oldest first, each with the row it changes as that row is now. */
-export async function listPendingChanges(): Promise<PendingChange[]> {
-  const rows = await db
-    .select()
-    .from(pendingChanges)
-    .where(eq(pendingChanges.status, "pending"))
-    .orderBy(asc(pendingChanges.createdAt));
+async function toPendingChanges(rows: (typeof pendingChanges.$inferSelect)[]): Promise<PendingChange[]> {
   const changes = rows.filter((row) => isProfileTableKey(row.profileTable));
   return Promise.all(
     changes.map(async (row) => {
@@ -155,9 +157,39 @@ export async function listPendingChanges(): Promise<PendingChange[]> {
         values: row.values ?? {},
         current: current?.values ?? null,
         reason: row.reason,
+        status: row.status,
       };
     }),
   );
+}
+
+/** Every session's proposals still waiting for review. */
+export async function listPendingChanges(): Promise<PendingChange[]> {
+  const rows = await db
+    .select()
+    .from(pendingChanges)
+    .where(eq(pendingChanges.status, "pending"))
+    .orderBy(asc(pendingChanges.createdAt));
+  return toPendingChanges(rows);
+}
+
+/** Where each of a session's proposals stands, by id. */
+export async function getSessionChangeStatuses(sessionId: string): Promise<Map<string, PendingChangeStatus>> {
+  const rows = await db
+    .select({ id: pendingChanges.id, status: pendingChanges.status })
+    .from(pendingChanges)
+    .where(eq(pendingChanges.sessionId, sessionId));
+  return new Map(rows.map((row) => [row.id, row.status]));
+}
+
+/** One session's proposals, reviewed or not. */
+export async function listSessionChanges(sessionId: string): Promise<PendingChange[]> {
+  const rows = await db
+    .select()
+    .from(pendingChanges)
+    .where(eq(pendingChanges.sessionId, sessionId))
+    .orderBy(asc(pendingChanges.createdAt));
+  return toPendingChanges(rows);
 }
 
 export type ClaimedPendingChange = {
@@ -188,6 +220,14 @@ export async function claimPendingChange(id: string, status: "approved" | "rejec
     values: row.values ?? {},
     sessionId: row.sessionId,
   };
+}
+
+/** Rejects every change in `ids` that's still pending, in one update. Others are left as they are. */
+export async function rejectPendingChanges(ids: string[]): Promise<void> {
+  await db
+    .update(pendingChanges)
+    .set({ status: "rejected", resolvedAt: new Date() })
+    .where(and(inArray(pendingChanges.id, ids), eq(pendingChanges.status, "pending")));
 }
 
 /** Puts a claimed change back up for review after applying it failed. */
