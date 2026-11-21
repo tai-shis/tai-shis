@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import Panel from "@/app/components/panel";
 import { actionClass } from "@/app/components/auth/action-class";
 import RowActionLabel from "@/app/components/admin/row-action-label";
-import IngestionChatView from "@/app/components/admin/ingest/ingestion-chat-view";
+import IngestionChatView, { type PdfUploadState } from "@/app/components/admin/ingest/ingestion-chat-view";
 import { toIngestionEntry } from "@/app/components/admin/ingest/to-ingestion-entry";
-import type { IngestionSessionSummary, IngestionUIMessage } from "@/app/lib/ingestion/types";
+import {
+  MAX_PDF_BYTES,
+  type IngestionSessionSummary,
+  type IngestionUIMessage,
+  type PdfAttachment,
+} from "@/app/lib/ingestion/types";
 
 type LoadSessionResult = { ok: true; messages: IngestionUIMessage[] } | { ok: false; error: string };
 
@@ -33,6 +38,25 @@ function describeError(error: Error | undefined): { message: string; canRetry: b
     return { message: error.message, canRetry: false };
   }
   return { message: GENERIC_ERROR, canRetry: true };
+}
+
+const PDF_TOO_LARGE = `PDFs can be up to ${MAX_PDF_BYTES / 1024 / 1024} MB.`;
+const PDF_FAILED = "That PDF couldn't be read. Try again.";
+
+/** Reads a PDF's text on the server. Resolves to the text, or a message for Tai. */
+async function readPdf(file: File): Promise<{ ok: true; pdf: PdfAttachment } | { ok: false; error: string }> {
+  if (file.size > MAX_PDF_BYTES) return { ok: false, error: PDF_TOO_LARGE };
+  const body = new FormData();
+  body.append("file", file);
+  try {
+    const response = await fetch("/api/admin/ingest/pdf", { method: "POST", body });
+    if (response.ok) return { ok: true, pdf: (await response.json()) as PdfAttachment };
+    // The server explains 4xx failures; anything else gets the generic message.
+    const message = response.status < 500 ? await response.text() : "";
+    return { ok: false, error: message || PDF_FAILED };
+  } catch {
+    return { ok: false, error: PDF_FAILED };
+  }
 }
 
 type OpenSession = { id: string; initialMessages: IngestionUIMessage[] };
@@ -104,6 +128,32 @@ function IngestionChat({ sessionId, initialMessages, onNewSession }: IngestionCh
     onFinish: () => router.refresh(),
   });
   const errorState = describeError(error);
+  const [upload, setUpload] = useState<PdfUploadState>({ status: "none" });
+  // Only the latest pick counts, so removing or replacing a PDF mid-read drops the old result.
+  const uploadIdRef = useRef(0);
+
+  const handleAttach = async (file: File) => {
+    const uploadId = ++uploadIdRef.current;
+    setUpload({ status: "reading", filename: file.name });
+    const result = await readPdf(file);
+    if (uploadId !== uploadIdRef.current) return;
+    setUpload(result.ok ? { status: "ready", pdf: result.pdf } : { status: "failed", error: result.error });
+  };
+
+  const handleRemove = () => {
+    uploadIdRef.current++;
+    setUpload({ status: "none" });
+  };
+
+  const handleSend = (text: string) => {
+    if (upload.status === "ready") {
+      const note = text ? [{ type: "text" as const, text }] : [];
+      sendMessage({ parts: [{ type: "data-pdf", data: upload.pdf }, ...note] });
+    } else {
+      sendMessage({ text });
+    }
+    handleRemove();
+  };
 
   return (
     <IngestionChatView
@@ -111,7 +161,10 @@ function IngestionChat({ sessionId, initialMessages, onNewSession }: IngestionCh
       status={status}
       error={errorState?.message ?? null}
       canRetry={errorState?.canRetry ?? false}
-      onSend={(text) => sendMessage({ text })}
+      upload={upload}
+      onAttach={handleAttach}
+      onRemoveAttachment={handleRemove}
+      onSend={handleSend}
       onStop={stop}
       onRetry={() => regenerate()}
       onNewSession={onNewSession}

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, sum } from "drizzle-orm";
+import { and, asc, desc, eq, gte, sql, sum } from "drizzle-orm";
 import { db } from "@/app/lib/db";
 import { ingestionMessages, ingestionSessions, pendingChanges } from "@/app/lib/db/ingestion-schema";
 import { sources } from "@/app/lib/db/profile-schema";
@@ -9,6 +9,7 @@ import type {
   IngestionUIMessage,
   PendingChange,
   PendingChangeAction,
+  PdfAttachment,
 } from "@/app/lib/ingestion/types";
 
 const SESSION_TITLE_CHARS = 80;
@@ -53,9 +54,9 @@ type NewIngestionMessage = {
   costUsd?: number;
 };
 
-/** A message resent after a failed reply is stored once. */
-export async function saveIngestionMessage({ sessionId, message, costUsd }: NewIngestionMessage): Promise<void> {
-  await db
+/** A message resent after a failed reply is stored once. Resolves to whether this call stored it. */
+export async function saveIngestionMessage({ sessionId, message, costUsd }: NewIngestionMessage): Promise<boolean> {
+  const inserted = await db
     .insert(ingestionMessages)
     .values({
       id: message.id,
@@ -64,8 +65,21 @@ export async function saveIngestionMessage({ sessionId, message, costUsd }: NewI
       parts: message.parts,
       costUsd: costUsd?.toString(),
     })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ id: ingestionMessages.id });
   await db.update(ingestionSessions).set({ updatedAt: new Date() }).where(eq(ingestionSessions.id, sessionId));
+  return inserted.length > 0;
+}
+
+/** Marks the session's source as a PDF and appends the file's text, so approved rows trace back to it. */
+export async function addPdfToSessionSource(sessionId: string, pdf: PdfAttachment): Promise<void> {
+  const sourceId = await getSessionSourceId(sessionId);
+  if (!sourceId) return;
+  const section = `${pdf.filename}\n\n${pdf.text}`;
+  await db
+    .update(sources)
+    .set({ kind: "pdf", extractedText: sql`coalesce(${sources.extractedText} || ${"\n\n"}, '') || ${section}` })
+    .where(eq(sources.id, sourceId));
 }
 
 export async function getIngestionSpendTodayUsd(): Promise<number> {

@@ -2,13 +2,23 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import IngestionChatView, { type IngestionEntry } from "@/app/components/admin/ingest/ingestion-chat-view";
 import { toIngestionEntry } from "@/app/components/admin/ingest/to-ingestion-entry";
-import type { IngestionUIMessage } from "@/app/lib/ingestion/types";
+import type { IngestionUIMessage, PdfAttachment } from "@/app/lib/ingestion/types";
+
+const resumePdf: PdfAttachment = {
+  filename: "resume.pdf",
+  pages: 2,
+  text: "Developer Intern, Acme, 05-2025 to 08-2025",
+  truncated: false,
+};
 
 const uiMessages: IngestionUIMessage[] = [
   {
     id: "u1",
     role: "user",
-    parts: [{ type: "text", text: "I was a developer intern at Acme from 05-2025 to 08-2025. I also climb." }],
+    parts: [
+      { type: "data-pdf", data: resumePdf },
+      { type: "text", text: "I was a developer intern at Acme from 05-2025 to 08-2025. I also climb." },
+    ],
   },
   {
     id: "a1",
@@ -58,6 +68,9 @@ const meta = {
     status: "ready",
     error: null,
     canRetry: false,
+    upload: { status: "none" },
+    onAttach: fn(),
+    onRemoveAttachment: fn(),
     onSend: fn(),
     onStop: fn(),
     onRetry: fn(),
@@ -80,6 +93,7 @@ export const WithSteps: Story = {
   args: { messages },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await expect(canvas.getByText("[pdf] resume.pdf · 2 pages")).toBeInTheDocument();
     await expect(canvas.getByText("read experience")).toBeInTheDocument();
     await expect(canvas.getByText("proposed add position: Developer Intern @ Acme")).toBeInTheDocument();
     await expect(canvas.getByText("proposing add hobby: Climbing failed")).toBeInTheDocument();
@@ -125,6 +139,55 @@ export const FailedWithRetry: Story = {
     await expect(canvas.getByRole("alert")).toHaveTextContent("Something went wrong. Try again.");
     await userEvent.click(canvas.getByRole("button", { name: "[retry]" }));
     await expect(args.onRetry).toHaveBeenCalled();
+  },
+};
+
+export const AttachesPdf: Story = {
+  play: async ({ canvasElement, args }) => {
+    const input = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!;
+    await expect(input).toHaveAttribute("accept", "application/pdf,.pdf");
+    const file = new File(["%PDF-1.4"], "resume.pdf", { type: "application/pdf" });
+    await userEvent.upload(input, file);
+    await expect(args.onAttach).toHaveBeenCalledWith(file);
+  },
+};
+
+export const ReadingPdf: Story = {
+  args: { upload: { status: "reading", filename: "resume.pdf" } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("status")).toHaveTextContent("reading resume.pdf...");
+    await userEvent.type(canvas.getByRole("textbox", { name: "Message" }), "only the projects");
+    await expect(canvas.getByRole("button", { name: "[send]" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "[attach pdf]" })).toBeDisabled();
+  },
+};
+
+export const SendsPdfWithoutNote: Story = {
+  args: { upload: { status: "ready", pdf: { ...resumePdf, truncated: true } } },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/only the first 40,000 characters will be sent/)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "[send]" }));
+    await expect(args.onSend).toHaveBeenCalledWith("");
+  },
+};
+
+export const RemovesPdf: Story = {
+  args: { upload: { status: "ready", pdf: resumePdf } },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "[remove]" }));
+    await expect(args.onRemoveAttachment).toHaveBeenCalled();
+  },
+};
+
+export const PdfFailed: Story = {
+  args: { upload: { status: "failed", error: "No text found in that PDF. If it's a scan, paste the text instead." } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("alert")).toHaveTextContent("No text found in that PDF.");
+    // A failed PDF doesn't count as something to send.
+    await expect(canvas.getByRole("button", { name: "[send]" })).toBeDisabled();
   },
 };
 

@@ -5,7 +5,18 @@ import type { ProfileFormValues, ProfileTableKey } from "@/app/lib/profile/table
 export const INGESTION_DAILY_SPEND_CAP_USD = 1;
 export const MAX_INGESTION_MESSAGE_CHARS = 20_000;
 
-export type IngestionUIMessage = UIMessage;
+// Vercel rejects request bodies over 4.5 MB, so uploads stay under it.
+export const MAX_PDF_BYTES = 4 * 1024 * 1024;
+export const MAX_PDF_PAGES = 20;
+/** Extracted text past this is cut off, and the model is told so. */
+export const MAX_PDF_TEXT_CHARS = 40_000;
+
+/** A PDF's extracted text, sent as a `data-pdf` part of Tai's message. The file itself isn't kept. */
+export type PdfAttachment = { filename: string; pages: number; text: string; truncated: boolean };
+
+export type IngestionDataTypes = { pdf: PdfAttachment };
+
+export type IngestionUIMessage = UIMessage<unknown, IngestionDataTypes>;
 
 export type PendingChangeAction = "create" | "update" | "delete";
 

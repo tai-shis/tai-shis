@@ -5,12 +5,22 @@ import Panel from "@/app/components/panel";
 import { actionClass } from "@/app/components/auth/action-class";
 import ChatInput from "@/app/components/chat/chat-input";
 import type { ChatStatus } from "@/app/components/chat/chat-view";
-import { MAX_INGESTION_MESSAGE_CHARS } from "@/app/lib/ingestion/types";
+import { MAX_INGESTION_MESSAGE_CHARS, MAX_PDF_TEXT_CHARS, type PdfAttachment } from "@/app/lib/ingestion/types";
 
 /** One line of an AI step: a tool it ran, such as reading a table or proposing a change. */
 export type IngestionStep = { id: string; label: string; state: "running" | "done" | "failed"; detail?: string };
 
-export type IngestionBlock = { kind: "text"; text: string } | { kind: "step"; step: IngestionStep };
+export type IngestionBlock =
+  | { kind: "text"; text: string }
+  | { kind: "step"; step: IngestionStep }
+  | { kind: "pdf"; filename: string; pages: number; truncated: boolean };
+
+/** The PDF picked for the next message, which is read on the server before it can be sent. */
+export type PdfUploadState =
+  | { status: "none" }
+  | { status: "reading"; filename: string }
+  | { status: "ready"; pdf: PdfAttachment }
+  | { status: "failed"; error: string };
 
 export type IngestionEntry = { id: string; role: "user" | "assistant"; blocks: IngestionBlock[] };
 
@@ -19,6 +29,9 @@ export type IngestionChatViewProps = {
   status: ChatStatus;
   error: string | null;
   canRetry: boolean;
+  upload: PdfUploadState;
+  onAttach: (file: File) => void;
+  onRemoveAttachment: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
   onRetry: () => void;
@@ -32,6 +45,9 @@ export default function IngestionChatView({
   status,
   error,
   canRetry,
+  upload,
+  onAttach,
+  onRemoveAttachment,
   onSend,
   onStop,
   onRetry,
@@ -57,8 +73,8 @@ export default function IngestionChatView({
       >
         {messages.length === 0 && (
           <p className="text-muted">
-            Paste a resume section, a project write-up, or a cover letter, or just tell me about yourself. I&apos;ll
-            propose profile changes for you to review below.
+            Paste a resume section, a project write-up, or a cover letter, attach a PDF, or just tell me about
+            yourself. I&apos;ll propose profile changes for you to review below.
           </p>
         )}
         {messages.map((message) => (
@@ -74,11 +90,16 @@ export default function IngestionChatView({
         </div>
       )}
 
+      <UploadStatus upload={upload} onRemove={onRemoveAttachment} />
+
       <ChatInput
         isBusy={isBusy}
         maxLength={MAX_INGESTION_MESSAGE_CHARS}
-        placeholder="Paste or type something about yourself"
+        placeholder={upload.status === "ready" ? "Add a note, or just send" : "Paste or type something about yourself"}
         rows={4}
+        allowEmpty={upload.status === "ready"}
+        sendDisabled={upload.status === "reading"}
+        accessory={<AttachButton disabled={isBusy || upload.status === "reading"} onAttach={onAttach} />}
         onSend={onSend}
         onStop={onStop}
       />
@@ -95,12 +116,83 @@ export default function IngestionChatView({
   );
 }
 
+function describePdf(pages: number, filename: string): string {
+  return `${filename} · ${pages} page${pages === 1 ? "" : "s"}`;
+}
+
+function UploadStatus({ upload, onRemove }: { upload: PdfUploadState; onRemove: () => void }) {
+  if (upload.status === "none") return null;
+  if (upload.status === "reading") {
+    return <p role="status" className="px-2 text-xs text-muted">reading {upload.filename}...</p>;
+  }
+
+  const remove = (
+    <button type="button" onClick={onRemove} className={`${actionClass} text-xs`}>
+      [remove]
+    </button>
+  );
+  if (upload.status === "failed") {
+    return (
+      <div className="flex flex-wrap items-center gap-2 px-2">
+        <p role="alert" className="text-xs text-destructive">{upload.error}</p>
+        {remove}
+      </div>
+    );
+  }
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-2 text-xs">
+      <p className="min-w-0 break-words">
+        <span className="text-accent">[pdf]</span> {describePdf(upload.pdf.pages, upload.pdf.filename)}
+        {upload.pdf.truncated && (
+          <span className="text-muted"> · only the first {MAX_PDF_TEXT_CHARS.toLocaleString("en-US")} characters will be sent</span>
+        )}
+      </p>
+      {remove}
+    </div>
+  );
+}
+
+function AttachButton({ disabled, onAttach }: { disabled: boolean; onAttach: (file: File) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,.pdf"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          // Cleared so picking the same file again still fires a change.
+          e.target.value = "";
+          if (file) onAttach(file);
+        }}
+      />
+      <button type="button" disabled={disabled} onClick={() => inputRef.current?.click()} className={`${actionClass} text-xs`}>
+        [attach pdf]
+      </button>
+    </>
+  );
+}
+
 function IngestionMessage({ message }: { message: IngestionEntry }) {
   const isUser = message.role === "user";
   return (
     <div className="flex flex-col gap-1">
       {message.blocks.map((block, i) =>
-        block.kind === "text" ? (
+        block.kind === "pdf" ? (
+          <p key={i} className="break-words">
+            <span className="text-accent">
+              you<span aria-hidden="true"> ›</span>
+            </span>{" "}
+            <span className="text-muted">
+              [pdf] {describePdf(block.pages, block.filename)}
+              {block.truncated && " · text cut off"}
+            </span>
+          </p>
+        ) : block.kind === "text" ? (
           <p key={i} className="whitespace-pre-wrap break-words">
             <span className={isUser ? "text-accent" : "text-border-accent"}>
               {isUser ? "you" : "ai"}

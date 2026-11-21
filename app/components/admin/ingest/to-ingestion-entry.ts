@@ -71,6 +71,10 @@ export function toIngestionEntry(message: IngestionUIMessage): IngestionEntry {
   const blocks: IngestionBlock[] = [];
   for (const part of message.parts) {
     if (part.type === "text" && part.text.trim() !== "") blocks.push({ kind: "text", text: part.text });
+    else if (part.type === "data-pdf") {
+      const { filename, pages, truncated } = part.data;
+      blocks.push({ kind: "pdf", filename, pages, truncated });
+    }
     else if (part.type.startsWith("tool-")) blocks.push({ kind: "step", step: toStep(part as ToolPart) });
   }
   return { id: message.id, role: message.role === "user" ? "user" : "assistant", blocks };

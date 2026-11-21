@@ -11,8 +11,10 @@ import { z } from "zod";
 import { auth } from "@/app/lib/auth";
 import { getStepsCostUsd } from "@/app/lib/ai/cost";
 import { INGESTION_PRICES, ingestionModel } from "@/app/lib/ai/models";
+import { describePdfForModel, pdfAttachmentSchema } from "@/app/lib/ingestion/pdf";
 import { buildIngestionInstructions } from "@/app/lib/ingestion/prompt";
 import {
+  addPdfToSessionSource,
   ensureIngestionSession,
   getIngestionSpendTodayUsd,
   saveIngestionMessage,
@@ -22,6 +24,7 @@ import {
   INGESTION_DAILY_SPEND_CAP_USD,
   MAX_INGESTION_MESSAGE_CHARS,
   type IngestionUIMessage,
+  type PdfAttachment,
 } from "@/app/lib/ingestion/types";
 
 export const maxDuration = 120;
@@ -40,7 +43,7 @@ const requestSchema = z.object({
       z.looseObject({
         id: z.string().min(1).max(100),
         role: z.enum(["user", "assistant"]),
-        parts: z.array(z.looseObject({ type: z.string(), text: z.unknown().optional() })),
+        parts: z.array(z.looseObject({ type: z.string(), text: z.unknown().optional(), data: z.unknown().optional() })),
       }),
     )
     .min(1)
@@ -54,6 +57,19 @@ function getText(message: RequestMessage): string {
     .map((part) => (part.type === "text" && typeof part.text === "string" ? part.text : ""))
     .join("")
     .trim();
+}
+
+function getPdfs(message: RequestMessage): PdfAttachment[] {
+  return message.parts.flatMap((part) => {
+    if (part.type !== "data-pdf") return [];
+    const parsed = pdfAttachmentSchema.safeParse(part.data);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+/** What names a session: its first text, or the PDF it started with. */
+function getTitleText(message: RequestMessage): string {
+  return getText(message) || getPdfs(message)[0]?.filename || "";
 }
 
 function parseJson(body: string): unknown {
@@ -85,11 +101,17 @@ export async function POST(request: Request) {
 
   const { id: sessionId, messages } = parsed.data;
   const lastMessage = messages.at(-1)!;
-  const question = getText(lastMessage);
-  if (lastMessage.role !== "user" || question === "" || question.length > MAX_INGESTION_MESSAGE_CHARS) return badRequest();
+  const note = getText(lastMessage);
+  const pdfs = getPdfs(lastMessage);
+  if (lastMessage.role !== "user" || pdfs.length > 1 || (note === "" && pdfs.length === 0)) return badRequest();
+  if (note.length > MAX_INGESTION_MESSAGE_CHARS) return badRequest();
 
   const tools = createIngestionTools(sessionId);
-  const validated = await safeValidateUIMessages<IngestionUIMessage>({ messages, tools });
+  const validated = await safeValidateUIMessages<IngestionUIMessage>({
+    messages,
+    tools,
+    dataSchemas: { pdf: pdfAttachmentSchema },
+  });
   if (!validated.success) return badRequest();
 
   if ((await getIngestionSpendTodayUsd()) >= INGESTION_DAILY_SPEND_CAP_USD) {
@@ -97,8 +119,10 @@ export async function POST(request: Request) {
   }
 
   const firstUserMessage = messages.find((message) => message.role === "user")!;
-  await ensureIngestionSession(sessionId, getText(firstUserMessage));
-  await saveIngestionMessage({ sessionId, message: validated.data.at(-1)! });
+  await ensureIngestionSession(sessionId, getTitleText(firstUserMessage));
+  const isNewMessage = await saveIngestionMessage({ sessionId, message: validated.data.at(-1)! });
+  // A retried message was already recorded the first time.
+  if (isNewMessage && pdfs[0]) await addPdfToSessionSource(sessionId, pdfs[0]);
 
   let reportCost: (costUsd: number) => void = () => {};
   const cost = new Promise<number>((resolve) => {
@@ -108,7 +132,11 @@ export async function POST(request: Request) {
   const result = streamText({
     model: ingestionModel,
     instructions: buildIngestionInstructions(),
-    messages: await convertToModelMessages(validated.data, { tools, ignoreIncompleteToolCalls: true }),
+    messages: await convertToModelMessages<IngestionUIMessage>(validated.data, {
+      tools,
+      ignoreIncompleteToolCalls: true,
+      convertDataPart: (part) => (part.type === "data-pdf" ? { type: "text", text: describePdfForModel(part.data) } : undefined),
+    }),
     tools,
     stopWhen: isStepCount(MAX_STEPS),
     maxOutputTokens: MAX_REPLY_TOKENS,

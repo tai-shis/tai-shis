@@ -8,17 +8,33 @@ export type ChatInputProps = {
   maxLength: number;
   placeholder: string;
   rows?: number;
+  /** Lets an empty message be sent, e.g. when a file is attached. */
+  allowEmpty?: boolean;
+  /** Holds sending back without showing [stop], e.g. while a file is still being read. */
+  sendDisabled?: boolean;
+  /** Extra controls on the left of the bottom row. */
+  accessory?: React.ReactNode;
   onSend: (text: string) => void;
   onStop: () => void;
 };
 
 /** Enter sends and Shift+Enter adds a line. While a reply is coming, [send] becomes [stop]. */
-export default function ChatInput({ isBusy, maxLength, placeholder, rows = 2, onSend, onStop }: ChatInputProps) {
+export default function ChatInput({
+  isBusy,
+  maxLength,
+  placeholder,
+  rows = 2,
+  allowEmpty = false,
+  sendDisabled = false,
+  accessory,
+  onSend,
+  onStop,
+}: ChatInputProps) {
   const inputId = useId();
   const countId = `${inputId}-count`;
   const [text, setText] = useState("");
   const trimmed = text.trim();
-  const canSend = !isBusy && trimmed.length > 0;
+  const canSend = !isBusy && !sendDisabled && (allowEmpty || trimmed.length > 0);
 
   const send = () => {
     if (!canSend) return;
@@ -54,6 +70,7 @@ export default function ChatInput({ isBusy, maxLength, placeholder, rows = 2, on
         className="w-full min-w-0 resize-none border border-border bg-transparent px-2 py-1 text-sm text-foreground"
       />
       <div className="flex items-center gap-2">
+        {accessory}
         <p id={countId} className="text-xs text-muted">
           {text.length}/{maxLength}
         </p>
