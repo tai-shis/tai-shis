@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { actionClass } from "@/app/components/auth/action-class";
 import ProfileRowForm from "@/app/components/admin/profile/profile-row-form";
+import RowActionLabel from "@/app/components/admin/row-action-label";
 import type {
   ProfileFormValues,
   ProfileMutationResult,
@@ -87,14 +88,5 @@ export default function ProfileRowItem({ row, config, onUpdate, onDelete, onSetV
       )}
       {error && <p role="alert" className="text-sm text-destructive px-2">{error}</p>}
     </li>
-  );
-}
-
-// One wrapping span keeps the label a single flex item, so the button's gap never splits it.
-function RowActionLabel({ action, rowTitle }: { action: string; rowTitle: string }) {
-  return (
-    <span>
-      [{action}<span className="sr-only"> {rowTitle}</span>]
-    </span>
   );
 }

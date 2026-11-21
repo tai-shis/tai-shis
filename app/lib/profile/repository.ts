@@ -54,6 +54,12 @@ export async function listProfileRows(table: ProfileTableKey): Promise<ProfileRo
   return rows.map((row) => toProfileRow(row, profileTables[table].fields));
 }
 
+export async function getProfileRow(table: ProfileTableKey, id: string): Promise<ProfileRow | null> {
+  const dbTable = getDbTable(table);
+  const [row] = await db.select().from(dbTable).where(eq(dbTable.id, id));
+  return row ? toProfileRow(row, profileTables[table].fields) : null;
+}
+
 export async function listAllProfileRows(): Promise<Record<ProfileTableKey, ProfileRow[]>> {
   const rowLists = await Promise.all(PROFILE_TABLE_KEYS.map(listProfileRows));
   return Object.fromEntries(PROFILE_TABLE_KEYS.map((table, i) => [table, rowLists[i]])) as Record<ProfileTableKey, ProfileRow[]>;
@@ -94,8 +100,9 @@ export async function searchVisibleProfileNotes(query: string, limit: number): P
   return rows.map(({ source, text }) => ({ source, text }));
 }
 
-export async function insertProfileRow(table: ProfileTableKey, values: ProfileColumnValues): Promise<void> {
-  await db.insert(getDbTable(table)).values(values as unknown as typeof facts.$inferInsert);
+/** `sourceId` records where the row came from, such as the ingestion session that proposed it. */
+export async function insertProfileRow(table: ProfileTableKey, values: ProfileColumnValues, sourceId?: string | null): Promise<void> {
+  await db.insert(getDbTable(table)).values({ ...values, sourceId } as unknown as typeof facts.$inferInsert);
 }
 
 /** Each update resolves to false when no row has the id. */

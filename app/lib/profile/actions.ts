@@ -1,9 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/app/lib/auth";
+import { isAdmin } from "@/app/lib/auth-guard";
 import {
   deleteProfileRow,
   insertProfileRow,
@@ -21,11 +20,6 @@ const NOT_ADMIN: ProfileMutationResult = { ok: false, error: "Only admins can ed
 const BAD_REQUEST: ProfileMutationResult = { ok: false, error: "That request was not valid. Reload the page and try again." };
 const ROW_MISSING: ProfileMutationResult = { ok: false, error: "This entry no longer exists. Reload the page." };
 const SAVE_FAILED: ProfileMutationResult = { ok: false, error: "Unable to save the change. Try again." };
-
-async function isAdmin(): Promise<boolean> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  return session?.user.role === "admin";
-}
 
 function isValidTarget(table: unknown, id?: unknown): table is ProfileTableKey {
   if (!tableKeySchema.safeParse(table).success) return false;

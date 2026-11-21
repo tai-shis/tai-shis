@@ -7,11 +7,11 @@ import {
   streamText,
   tool,
   toUIMessageStream,
-  type LanguageModelUsage,
 } from "ai";
 import { z } from "zod";
 import { auth } from "@/app/lib/auth";
-import { PUBLIC_CHAT_PRICE_PER_TOKEN_USD, publicChatModel } from "@/app/lib/ai/models";
+import { getStepsCostUsd } from "@/app/lib/ai/cost";
+import { PUBLIC_CHAT_PRICES, publicChatModel } from "@/app/lib/ai/models";
 import { buildChatInstructions } from "@/app/lib/chat/prompt";
 import {
   claimConversation,
@@ -106,14 +106,6 @@ function parseJson(body: string): unknown {
   }
 }
 
-/** OpenRouter reports the exact charge per call. Token prices are the fallback if it doesn't. */
-function getCallCostUsd(usage: LanguageModelUsage): number {
-  const reported = (usage.raw as { cost?: unknown } | undefined)?.cost;
-  if (typeof reported === "number") return reported;
-  const { input, output } = PUBLIC_CHAT_PRICE_PER_TOKEN_USD;
-  return (usage.inputTokens ?? 0) * input + (usage.outputTokens ?? 0) * output;
-}
-
 function textResponse(status: number, message: string): Response {
   return new Response(message, { status, headers: { "content-type": "text/plain; charset=utf-8" } });
 }
@@ -163,7 +155,7 @@ export async function POST(request: Request) {
     stopWhen: isStepCount(MAX_STEPS),
     maxOutputTokens: MAX_REPLY_TOKENS,
     onEnd: async ({ text, steps }) => {
-      const costUsd = steps.reduce((total, step) => total + getCallCostUsd(step.usage), 0);
+      const costUsd = getStepsCostUsd(steps, PUBLIC_CHAT_PRICES);
       await insertChatMessage({ conversationId, userId, role: "assistant", content: text, costUsd });
     },
   });

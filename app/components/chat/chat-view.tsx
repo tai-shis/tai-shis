@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Panel from "@/app/components/panel";
 import { actionClass } from "@/app/components/auth/action-class";
+import ChatInput from "@/app/components/chat/chat-input";
 import { DAILY_MESSAGE_LIMIT, MAX_MESSAGE_CHARS, MAX_TURNS } from "@/app/lib/chat/limits";
 
 export type ChatEntry = { id: string; role: "user" | "assistant"; text: string };
@@ -99,7 +100,13 @@ export default function ChatView({
       ) : (
         <>
           <Suggestions isDisabled={isBusy} onPick={onSend} />
-          <ChatInput isBusy={isBusy} onSend={onSend} onStop={onStop} />
+          <ChatInput
+            isBusy={isBusy}
+            maxLength={MAX_MESSAGE_CHARS}
+            placeholder="Ask me something"
+            onSend={onSend}
+            onStop={onStop}
+          />
         </>
       )}
 
@@ -145,67 +152,5 @@ function Suggestions({ isDisabled, onPick }: { isDisabled: boolean; onPick: (tex
         </li>
       ))}
     </ul>
-  );
-}
-
-type ChatInputProps = {
-  isBusy: boolean;
-  onSend: (text: string) => void;
-  onStop: () => void;
-};
-
-function ChatInput({ isBusy, onSend, onStop }: ChatInputProps) {
-  const inputId = useId();
-  const countId = `${inputId}-count`;
-  const [text, setText] = useState("");
-  const trimmed = text.trim();
-  const canSend = !isBusy && trimmed.length > 0;
-
-  const send = () => {
-    if (!canSend) return;
-    onSend(trimmed);
-    setText("");
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter sends and Shift+Enter adds a line. Enter while an IME is composing confirms the text instead.
-    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
-    e.preventDefault();
-    send();
-  };
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        send();
-      }}
-      className="flex flex-col gap-1 px-2"
-    >
-      <label htmlFor={inputId} className="sr-only">Message</label>
-      <textarea
-        id={inputId}
-        value={text}
-        rows={2}
-        maxLength={MAX_MESSAGE_CHARS}
-        placeholder="Ask me something"
-        aria-describedby={countId}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="w-full min-w-0 resize-none border border-border bg-transparent px-2 py-1 text-sm text-foreground"
-      />
-      <div className="flex items-center gap-2">
-        <p id={countId} className="text-xs text-muted">
-          {text.length}/{MAX_MESSAGE_CHARS}
-        </p>
-        <div className="ml-auto">
-          {isBusy ? (
-            <button type="button" onClick={onStop} className={actionClass}>[stop]</button>
-          ) : (
-            <button type="submit" disabled={!canSend} className={`${actionClass} disabled:cursor-not-allowed`}>[send]</button>
-          )}
-        </div>
-      </div>
-    </form>
   );
 }
