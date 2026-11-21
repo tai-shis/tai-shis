@@ -91,6 +91,7 @@ const meta = {
     upload: { status: "none" },
     onAttach: fn(),
     onRemoveAttachment: fn(),
+    onGrill: fn(),
     onSend: fn(),
     onStop: fn(),
     onRetry: fn(),
@@ -137,6 +138,7 @@ export const WaitingForReview: Story = {
     await expect(canvas.getByRole("textbox", { name: "Message" })).toBeDisabled();
     await expect(canvas.getByRole("button", { name: "[send]" })).toBeDisabled();
     await expect(canvas.getByRole("button", { name: "[attach pdf]" })).toBeDisabled();
+    await expect(canvas.getByRole("button", { name: "[grill me]" })).toBeDisabled();
   },
 };
 
@@ -167,6 +169,13 @@ export const Waiting: Story = {
     await expect(canvas.getByRole("button", { name: "[new session]" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: "[stop]" }));
     await expect(args.onStop).toHaveBeenCalled();
+  },
+};
+
+export const StartsGrilling: Story = {
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "[grill me]" }));
+    await expect(args.onGrill).toHaveBeenCalled();
   },
 };
 

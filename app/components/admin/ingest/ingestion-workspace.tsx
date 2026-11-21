@@ -43,6 +43,9 @@ function describeError(error: Error | undefined): { message: string; canRetry: b
   return { message: GENERIC_ERROR, canRetry: true };
 }
 
+// The prompt's grill mode starts on this, the same as if Tai typed it.
+const GRILL_MESSAGE = "Grill me.";
+
 const PDF_TOO_LARGE = `PDFs can be up to ${MAX_PDF_BYTES / 1024 / 1024} MB.`;
 const PDF_FAILED = "That PDF couldn't be read. Try again.";
 
@@ -218,6 +221,7 @@ function IngestionChat({ session, loadChanges, actions, onNewSession }: Ingestio
         upload={upload}
         onAttach={handleAttach}
         onRemoveAttachment={handleRemove}
+        onGrill={() => sendMessage({ text: GRILL_MESSAGE })}
         onSend={handleSend}
         onStop={stop}
         onRetry={() => regenerate()}

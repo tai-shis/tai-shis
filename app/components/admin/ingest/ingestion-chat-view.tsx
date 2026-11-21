@@ -50,6 +50,8 @@ export type IngestionChatViewProps = {
   upload: PdfUploadState;
   onAttach: (file: File) => void;
   onRemoveAttachment: () => void;
+  /** Starts grill mode: the AI interviews Tai to fill gaps in the profile. */
+  onGrill: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
   onRetry: () => void;
@@ -68,6 +70,7 @@ export default function IngestionChatView({
   upload,
   onAttach,
   onRemoveAttachment,
+  onGrill,
   onSend,
   onStop,
   onRetry,
@@ -97,7 +100,8 @@ export default function IngestionChatView({
         {messages.length === 0 && (
           <p className="text-muted">
             Paste a resume section, a project write-up, or a cover letter, attach a PDF, or just tell me about
-            yourself. I&apos;ll propose profile changes for you to review below.
+            yourself. I&apos;ll propose profile changes for you to review below. Or press [grill me] and I&apos;ll
+            interview you to fill the gaps.
           </p>
         )}
         {messages.map((message, i) => (
@@ -132,7 +136,15 @@ export default function IngestionChatView({
         allowEmpty={upload.status === "ready"}
         inputDisabled={isLocked}
         sendDisabled={isLocked || upload.status === "reading"}
-        accessory={<AttachButton disabled={isLocked || upload.status === "reading"} onAttach={onAttach} />}
+        accessory={
+          <>
+            <AttachButton disabled={isLocked || upload.status === "reading"} onAttach={onAttach} />
+            {/* A picked PDF would be dropped, so grilling waits until it's sent or removed. */}
+            <button type="button" onClick={onGrill} disabled={isLocked || upload.status !== "none"} className={`${actionClass} text-xs`}>
+              [grill me]
+            </button>
+          </>
+        }
         onSend={onSend}
         onStop={onStop}
       />
