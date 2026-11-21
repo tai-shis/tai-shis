@@ -15,7 +15,7 @@ import { PUBLIC_CHAT_PRICES, publicChatModel } from "@/app/lib/ai/models";
 import { buildChatInstructions } from "@/app/lib/chat/prompt";
 import {
   claimConversation,
-  countUserMessagesToday,
+  claimDailyMessage,
   getSpendTodayUsd,
   insertChatMessage,
 } from "@/app/lib/chat/repository";
@@ -133,19 +133,17 @@ export async function POST(request: Request) {
     return textResponse(403, "This chat belongs to another account. Start a new chat.");
   }
 
-  const [sentToday, spentToday] = await Promise.all([
-    isAdmin ? Promise.resolve(0) : countUserMessagesToday(userId),
-    getSpendTodayUsd(),
-  ]);
-  if (!isAdmin && sentToday >= DAILY_MESSAGE_LIMIT) {
-    return textResponse(429, `You've used today's ${DAILY_MESSAGE_LIMIT} messages. Come back tomorrow.`);
-  }
-  if (spentToday >= DAILY_SPEND_CAP_USD) {
+  // Checked before claiming a message, so a day the chat is closed doesn't use up anyone's messages.
+  if ((await getSpendTodayUsd()) >= DAILY_SPEND_CAP_USD) {
     return textResponse(503, "The chat is taking a break for today. Try again tomorrow.");
+  }
+  const remainingToday = isAdmin ? null : await claimDailyMessage(userId, DAILY_MESSAGE_LIMIT);
+  if (!isAdmin && remainingToday === null) {
+    return textResponse(429, `You've used today's ${DAILY_MESSAGE_LIMIT} messages. Come back tomorrow.`);
   }
 
   await insertChatMessage({ conversationId, userId, role: "user", content: getText(messages.at(-1)!) });
-  const metadata: ChatMessageMetadata = { remainingToday: isAdmin ? null : DAILY_MESSAGE_LIMIT - sentToday - 1 };
+  const metadata: ChatMessageMetadata = { remainingToday };
 
   const result = streamText({
     model: publicChatModel,

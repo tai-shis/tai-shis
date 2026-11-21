@@ -1,6 +1,6 @@
-import { and, count, eq, gte, sum } from "drizzle-orm";
+import { eq, gte, lt, sql, sum } from "drizzle-orm";
 import { db } from "@/app/lib/db";
-import { chatConversations, chatMessages } from "@/app/lib/db/chat-schema";
+import { chatConversations, chatMessages, chatUsage } from "@/app/lib/db/chat-schema";
 
 function getStartOfUtcDay(): Date {
   const now = new Date();
@@ -17,12 +17,22 @@ export async function claimConversation(conversationId: string, userId: string):
   return conversation?.userId === userId;
 }
 
-export async function countUserMessagesToday(userId: string): Promise<number> {
+/**
+ * Uses up one of today's messages. Resolves to how many are left, or null when none were.
+ * The check and the increment are one statement, so concurrent requests can't overshoot.
+ */
+export async function claimDailyMessage(userId: string, limit: number): Promise<number | null> {
+  const day = getStartOfUtcDay().toISOString().slice(0, 10);
   const [row] = await db
-    .select({ value: count() })
-    .from(chatMessages)
-    .where(and(eq(chatMessages.userId, userId), eq(chatMessages.role, "user"), gte(chatMessages.createdAt, getStartOfUtcDay())));
-  return row?.value ?? 0;
+    .insert(chatUsage)
+    .values({ userId, day, count: 1 })
+    .onConflictDoUpdate({
+      target: [chatUsage.userId, chatUsage.day],
+      set: { count: sql`${chatUsage.count} + 1` },
+      setWhere: lt(chatUsage.count, limit),
+    })
+    .returning({ count: chatUsage.count });
+  return row ? limit - row.count : null;
 }
 
 export async function getSpendTodayUsd(): Promise<number> {

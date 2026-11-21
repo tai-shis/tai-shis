@@ -1,4 +1,4 @@
-import { index, numeric, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { date, index, integer, numeric, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "@/app/lib/db/schema";
 
 export const chatMessageRole = pgEnum("chat_message_role", ["user", "assistant"]);
@@ -22,7 +22,7 @@ export const chatMessages = pgTable(
     conversationId: uuid("conversation_id")
       .notNull()
       .references(() => chatConversations.id, { onDelete: "cascade" }),
-    // Copied from the conversation so the daily limit is one indexed count.
+    // Copied from the conversation so per-user queries skip the join.
     userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
     role: chatMessageRole("role").notNull(),
     content: text("content").notNull(),
@@ -35,4 +35,18 @@ export const chatMessages = pgTable(
     index("chat_messages_user_id_created_at_idx").on(table.userId, table.createdAt),
     index("chat_messages_created_at_idx").on(table.createdAt),
   ],
+);
+
+// One row per visitor per UTC day. The daily limit is claimed with a single upsert,
+// so requests sent at the same moment can't both slip under it.
+export const chatUsage = pgTable(
+  "chat_usage",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    day: date("day", { mode: "string" }).notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.day] })],
 );

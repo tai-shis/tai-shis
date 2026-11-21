@@ -50,6 +50,13 @@
       "when": 1795240646451,
       "tag": "0006_ingestion",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795285489451,
+      "tag": "0007_chat_usage",
+      "breakpoints": true
     }
   ]
 }
